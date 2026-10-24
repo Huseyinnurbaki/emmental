@@ -1,0 +1,9 @@
+// Cloudflare deploys the landing page (emmental.artichoke.monster) from this
+// config: a static site, no server code. Pushes to main redeploy it.
+{
+  "name": "emmental",
+  "compatibility_date": "2026-10-24",
+  "assets": {
+    "directory": "./landing"
+  }
+}
