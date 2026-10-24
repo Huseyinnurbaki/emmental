@@ -40,6 +40,10 @@ final class HIDPPDevice {
     private var featureIndexes: [UInt32: UInt8] = [:]
     /// 1–15; 0 is reserved for notifications the device sends on its own.
     private var lastSoftwareID: UInt8 = 0
+    /// Set when a request gets no reply even after retries, cleared by any
+    /// reply. After the Mac sleeps, an open connection can look fine while the
+    /// mouse no longer answers on it; the owner replaces it with a fresh one.
+    private(set) var isUnresponsive = false
 
     private final class Request {
         let completion: (Response?) -> Void
@@ -61,7 +65,11 @@ final class HIDPPDevice {
     /// has Input Monitoring permission.
     init?(device: IOHIDDevice, isReceiver: Bool) {
         // Open before initializing anything, so a failure never reaches deinit.
-        guard IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone)) == kIOReturnSuccess else { return nil }
+        let result = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
+        guard result == kIOReturnSuccess else {
+            log.error("Couldn't open HID device: \(String(format: "0x%08X", result), privacy: .public)")
+            return nil
+        }
         self.device = device
         self.isReceiver = isReceiver
         inputBuffer = .allocate(capacity: 64)
@@ -118,6 +126,7 @@ final class HIDPPDevice {
                           retries: retries - 1, completion: request.completion)
             } else {
                 log.error("No reply from device \(deviceIndex) to feature \(feature) function \(function)")
+                self.isUnresponsive = true
                 request.completion(nil)
             }
         }
@@ -155,6 +164,7 @@ final class HIDPPDevice {
         guard var queue = pending[key], !queue.isEmpty else { return }
         let done = queue.removeFirst()
         pending[key] = queue.isEmpty ? nil : queue
+        isUnresponsive = false // any reply, even an error, means the link works
         done.completion(response)
     }
 

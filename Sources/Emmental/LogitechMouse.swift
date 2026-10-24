@@ -1,5 +1,8 @@
 import AppKit
 import IOKit.hid
+import os
+
+private let log = Logger(subsystem: "app.emmental.Emmental", category: "HID++")
 
 /// The DPI values a sensor accepts, from HID++ ADJUSTABLE_DPI's sensor list.
 struct DPIRange {
@@ -250,14 +253,19 @@ final class LogitechMice {
     /// saved settings can be applied to it.
     var onMouseAvailable: ((LogitechMouse) -> Void)?
 
-    private let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
     private var connections: [UInt64: HIDPPDevice] = [:]
     /// Receivers address paired devices by index; Bolt and Unifying allow six.
     private static let receiverSlots: [UInt8] = Array(1...6)
     private static let adjustableDPI: UInt16 = 0x2201
 
-    init() {
+    /// The Logitech devices connected right now. A manager that is never opened
+    /// or scheduled keeps the device list it first saw, so after a mouse
+    /// reconnects it would still hand back the old, dead device. Asking a new
+    /// one each time is cheap and always current.
+    private static func connectedDevices() -> Set<IOHIDDevice> {
+        let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         IOHIDManagerSetDeviceMatching(manager, [kIOHIDVendorIDKey: 0x046D] as CFDictionary)
+        return IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> ?? []
     }
 
     /// Re-scans connected devices, reusing connections that are still valid.
@@ -269,7 +277,13 @@ final class LogitechMice {
         var blocked = false
         var seen = Set<UInt64>()
 
-        for device in IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> ?? [] {
+        // A connection that stopped answering gets replaced by a fresh one below.
+        for (id, connection) in connections where connection.isUnresponsive {
+            log.notice("Reopening an unresponsive HID++ connection")
+            drop(id)
+        }
+
+        for device in Self.connectedDevices() {
             let kind = HIDPPDevice.kind(of: device)
             guard kind.supported else { continue }
             var id: UInt64 = 0
@@ -294,11 +308,22 @@ final class LogitechMice {
         }
 
         // Drop connections to devices that are gone, and the mice behind them.
-        for (id, connection) in connections where !seen.contains(id) {
-            connections[id] = nil
-            mice.removeAll { $0.connection === connection }
+        for id in connections.keys where !seen.contains(id) {
+            drop(id)
         }
         return (mice, blocked)
+    }
+
+    /// Closes every connection so the next refresh opens fresh ones. Called
+    /// after the Mac wakes: connections opened before sleep can stay open on
+    /// paper while the mouse no longer answers on them.
+    func reconnect() {
+        connections.keys.forEach(drop)
+    }
+
+    private func drop(_ id: UInt64) {
+        guard let connection = connections.removeValue(forKey: id) else { return }
+        mice.removeAll { $0.connection === connection }
     }
 
     /// A paired device counts as a mouse if it has adjustable DPI, which

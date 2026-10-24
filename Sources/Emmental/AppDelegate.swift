@@ -202,9 +202,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Applying settings
 
-    private func applyAll(reason: String) {
+    /// `reconnect` opens fresh HID++ connections first, for after a wake or a
+    /// reconnect, when the old ones may no longer reach the mouse.
+    private func applyAll(reason: String, reconnect: Bool = false) {
         log.notice("Applying settings (\(reason, privacy: .public))")
         applySpeeds()
+        if reconnect { logitechMice.reconnect() }
         applyLogitech()
     }
 
@@ -217,7 +220,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for delay in [1.0, 3.0, 8.0] {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                 guard let self = self, self.reapplyGeneration == generation else { return }
-                self.applyAll(reason: "\(reason) +\(Int(delay))s")
+                self.applyAll(reason: "\(reason) +\(Int(delay))s", reconnect: true)
             }
         }
     }
