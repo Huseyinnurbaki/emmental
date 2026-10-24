@@ -24,7 +24,7 @@ final class SettingsWindowController: NSWindowController {
     private let thresholdHint = SettingsWindowController.hintLabel("Lower switches to free-spin with a gentler flick.")
     private let highResolution = SwitchRowView(title: "High-resolution scrolling")
     private let highResolutionHint = SettingsWindowController.hintLabel(
-        "Experimental. On macOS this may make scrolling much faster.")
+        "Finer, smoother scrolling from the wheel.")
     private let loginRow = SwitchRowView(title: "Open at login")
     private let updateStatus = NSTextField(labelWithString: "")
     private let updateButton = NSButton(title: "Check for Updates", target: nil, action: nil)

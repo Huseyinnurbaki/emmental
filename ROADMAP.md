@@ -31,14 +31,14 @@ What's next for Emmental, roughly in order.
 - [x] Speed: sensor DPI over HID++ (`0x2201`)
 - [x] Battery level next to the mouse name (HID++ `0x1004`, falling back to `0x1000`)
 - [x] SmartShift (HID++ `0x2110`): auto-switch on or off, and the free-spin threshold
-- [x] High-resolution scrolling (HID++ `0x2121`), experimental
+- [x] High-resolution scrolling (HID++ `0x2121`)
 - [x] Bolt / Unifying receiver support: device indexes 1–6, discovery by
       adjustable DPI, reapply on the receiver's reconnect notification
 - [x] `--diagnose` mode: dumps what Emmental reads over HID++, read-only
 - [x] Menu with Speed, Acceleration and Scroll speed; a Settings window (⌘,) for
       SmartShift, high-res scrolling and open at login; app icon
-- [ ] Decide on high-resolution scrolling: if macOS doesn't scale the 15× steps
-      down, drop it, or scale wheel events ourselves (needs Accessibility)
+- [x] High-resolution scrolling verified on the MX Master 3S: macOS scales the 15×
+      steps, so the distance per notch stays the same and it's just smoother
 - [ ] Test receiver support on real hardware
 - [x] **Check for Updates** in Settings: reads the website's `version.json` and
       compares it with the app's version; "You're up to date" or a Download

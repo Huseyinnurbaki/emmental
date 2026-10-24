@@ -22,7 +22,7 @@ Masters and MX Anywhere 3 / 3S should work too. They're untested so far, so
 
 - **SmartShift**: whether the wheel switches to free-spin by itself when you
   flick it, and how hard a flick it takes
-- **High-resolution scrolling** (experimental)
+- **High-resolution scrolling**: finer, smoother wheel scrolling
 - **Open at login**
 
 Also:
@@ -114,7 +114,8 @@ Unifying receiver (paired devices 1–6; anything with adjustable DPI counts as 
 mouse). Receiver support is untested on real hardware so far.
 
 High-resolution scrolling makes the wheel send 15 finer steps per notch on the
-MX Master 3S. macOS may not scale those back down, so it's marked experimental.
+MX Master 3S; macOS scales them back to the usual distance per notch, so
+scrolling moves the same amount, just more smoothly.
 
 To see what Emmental reads from your mouse, without changing anything:
 

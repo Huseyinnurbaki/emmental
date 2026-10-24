@@ -9,7 +9,7 @@
 - Acceleration up to 8.0, past the 3.0 limit in System Settings, set per mouse.
 - Scroll speed per mouse.
 - Logitech features (optional, need Input Monitoring permission): DPI 200–8000, SmartShift
-  free-spin threshold, battery level, and experimental high-resolution scrolling. Uses
+  free-spin threshold, battery level, and high-resolution scrolling. Uses
   Logitech's HID++ 2.0 protocol over Bluetooth, with early support for Bolt and Unifying receivers.
 - Settings are reapplied at login, after sleep and when the mouse reconnects.
 - No analytics. The only network request is a manual "Check for Updates" in Settings,
