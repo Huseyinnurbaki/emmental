@@ -40,7 +40,7 @@ What's next for Emmental, roughly in order.
 
 ## Open source
 
-- [ ] Pick a license (MIT is the usual choice for small utilities)
+- [x] License: MIT
 - [ ] README polish: screenshots of the menu and the About window, and a short
       "why" (vendor apps are heavy; Emmental is about 8 MB)
 - [ ] GitHub link in the About window

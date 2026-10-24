@@ -1,0 +1,20 @@
+# Emmental
+
+> A free, lightweight macOS menu bar app for tuning your mouse: speed, acceleration and scroll
+> speed for any mouse, plus sensor DPI, SmartShift and battery level on Logitech MX mice like the
+> MX Master 3S. About 9 MB of memory. No updater, no account, no tracking.
+
+## Key facts
+- macOS 12 or later. Lives in the menu bar; no Dock icon, no background services.
+- Acceleration up to 8.0, past the 3.0 limit in System Settings, set per mouse.
+- Scroll speed per mouse.
+- Logitech features (optional, need Input Monitoring permission): DPI 200–8000, SmartShift
+  free-spin threshold, battery level, and experimental high-resolution scrolling. Uses
+  Logitech's HID++ 2.0 protocol over Bluetooth, with early support for Bolt and Unifying receivers.
+- Settings are reapplied at login, after sleep and when the mouse reconnects.
+- Makes no network connections; no analytics.
+- A lightweight alternative to Logi Options+ for people who only need speed, scrolling and
+  SmartShift. It does not do button remapping or gestures.
+
+## Links
+- Home and download: https://emmental.artichoke.monster/

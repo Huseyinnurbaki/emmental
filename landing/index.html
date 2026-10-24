@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emmental · Mouse tuning for Mac, without the bloat</title>
+<meta name="description" content="Free 9 MB Mac menu bar app for mouse speed, acceleration and scrolling, plus DPI, SmartShift and battery on Logitech MX mice. No updater, no account.">
+<link rel="canonical" href="https://emmental.artichoke.monster/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1E2A4A">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- Link previews (Slack, iMessage, X, LinkedIn, …) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Emmental">
+<meta property="og:url" content="https://emmental.artichoke.monster/">
+<meta property="og:title" content="Emmental · Mouse tuning for Mac, without the bloat">
+<meta property="og:description" content="A free 9 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery. No updater, no account, no tracking.">
+<meta property="og:image" content="https://emmental.artichoke.monster/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Emmental app icon, the headline “Mouse tuning, without the bloat.”, and its menu with Speed, Acceleration and Scroll speed sliders.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Emmental · Mouse tuning for Mac, without the bloat">
+<meta name="twitter:description" content="A free 9 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery.">
+<meta name="twitter:image" content="https://emmental.artichoke.monster/og.png">
+<meta name="twitter:image:alt" content="The Emmental app icon, the headline “Mouse tuning, without the bloat.”, and its menu with Speed, Acceleration and Scroll speed sliders.">
+
+<!-- Search engines: what this is, for rich results. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Emmental",
+  "description": "A lightweight macOS menu bar app for mouse speed, acceleration and scroll speed, plus DPI, SmartShift and battery on Logitech MX mice.",
+  "url": "https://emmental.artichoke.monster/",
+  "image": "https://emmental.artichoke.monster/og.png",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "macOS 12 or later",
+  "softwareVersion": "0.1.0",
+  "fileSize": "1MB",
+  "downloadUrl": "https://emmental.artichoke.monster/Emmental.zip",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "Mouse acceleration up to 8.0, past the System Settings limit",
+    "Per-mouse scroll speed",
+    "Sensor DPI on Logitech MX mice (200–8000 on the MX Master 3S)",
+    "SmartShift scroll wheel control",
+    "Battery level in the menu bar",
+    "Open at login, settings kept after sleep",
+    "No updater, no account, no tracking"
+  ]
+}
+</script>
+<style>
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --cheese: #FFD45C;
+  --cheese-deep: #F6BF3A;
+  --ink: #1A1405;
+  --accent: #0A84FF;
+  --material: rgba(246, 246, 248, 0.82);
+  --window: #F6F6F8;
+  --window-side: #ECECF0;
+  --text: #1D1D1F;
+  --text-2: #6E6E73;
+  --text-3: #A1A1A6;
+  --line: rgba(0, 0, 0, 0.1);
+  --track: #D9D9DE;
+  --group: rgba(0, 0, 0, 0.035);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --material: rgba(42, 44, 52, 0.78);
+    --window: #26272D;
+    --window-side: #2D2E35;
+    --text: #F2F2F5;
+    --text-2: #A1A1AA;
+    --text-3: #6E6E78;
+    --line: rgba(255, 255, 255, 0.12);
+    --track: #4A4B55;
+    --group: rgba(255, 255, 255, 0.05);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #1B2A55; }
+body { font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+
+/* Desktop */
+.desktop { position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; }
+.wallpaper { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.menubar {
+  position: absolute; top: 0; left: 0; right: 0; height: 30px; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+  background: var(--material); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  font-size: 13px;
+}
+.menubar .left, .menubar .right { display: flex; align-items: center; gap: 18px; }
+.menubar .app { font-weight: 700; }
+.status { display: flex; align-items: center; height: 22px; padding: 0 6px; border-radius: 6px; border: 0; background: none; cursor: pointer; }
+.status.active { background: rgba(127, 127, 140, 0.28); }
+.status svg { display: block; }
+.status-icon { display: flex; align-items: center; gap: 5px; color: var(--text); }
+
+/* The Emmental menu, a faithful copy of the real one */
+/* Sits under the wedge: CSS puts it near the right edge, and the script lines
+   it up exactly once it can measure the menu bar. */
+.menu {
+  position: absolute; top: 34px; right: 96px; width: 268px; z-index: 60;
+  background: var(--material); backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 0.5px solid var(--line); border-radius: 12px; padding: 8px 0 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+.menu-section { padding: 6px 16px 6px 20px; }
+.menu-head { font-size: 11px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
+.slider-head { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+.slider-head output { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.hint { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+.menu hr { border: 0; border-top: 0.5px solid var(--line); margin: 6px 12px; }
+.menu-item { display: flex; align-items: center; gap: 8px; width: calc(100% - 12px); margin: 0 6px; padding: 4px 10px; border: 0; border-radius: 6px; background: none; font-size: 13px; text-align: left; cursor: default; }
+.menu-item:hover { background: var(--accent); color: #fff; }
+.menu-item:hover kbd { color: rgba(255, 255, 255, 0.8); }
+.wifi-menu { width: 280px; }
+.wifi-menu .row { padding-top: 4px; padding-bottom: 4px; }
+.network { gap: 10px; }
+.net-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--group); flex: none; color: var(--text); }
+.net-badge.on { background: var(--accent); color: #fff; }
+.menu-item:hover .net-badge { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.net-lock { margin-left: auto; color: var(--text-3); flex: none; }
+.menu-item:hover .net-lock { color: rgba(255, 255, 255, 0.85); }
+.status.off svg { opacity: 0.35; }
+.menu-item kbd { margin-left: auto; font-family: var(--font); color: var(--text-3); }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 2px 0 0; background: none; cursor: pointer;
+  --p: 50%;
+}
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--p), var(--track) var(--p)); }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--p), var(--track) var(--p)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%; background: #fff; border: 0.5px solid rgba(0, 0, 0, 0.15); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 0.5px solid rgba(0, 0, 0, 0.15); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+input[type=range]:disabled { opacity: 0.4; }
+.ticks { display: flex; justify-content: space-between; padding: 0 9px; margin-top: -2px; }
+.ticks i { width: 1px; height: 5px; background: var(--text-3); }
+
+/* Hero */
+.hero { position: absolute; left: 7vw; top: 22vh; max-width: 470px; color: #fff; z-index: 10; }
+.hero h1 { font-size: clamp(36px, 4.6vw, 58px); line-height: 1.04; letter-spacing: -0.03em; margin: 0; font-weight: 800; }
+.hero p { font-size: 17px; line-height: 1.5; color: rgba(255, 255, 255, 0.82); margin: 18px 0 0; max-width: 410px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; text-decoration: none; border: 0; cursor: pointer; }
+.btn.primary { background: var(--cheese); color: var(--ink); }
+.btn.ghost { background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); }
+.fineprint { font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 12px; }
+
+/* A second pointer that follows your mouse the way Emmental would move it. */
+.cheese-pointer { position: absolute; left: 0; top: 0; z-index: 58; pointer-events: none; will-change: transform; }
+.cheese-pointer[hidden] { display: none; }
+.try-it { display: flex; align-items: center; gap: 12px; margin-top: 26px; font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, 0.72); max-width: 440px; }
+.pointer-toggle {
+  flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px 7px 12px; border-radius: 999px; border: 0.5px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.16); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  color: #fff; font-size: 12.5px; font-weight: 500; cursor: pointer;
+}
+.mini-switch { position: relative; width: 28px; height: 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.3); transition: background 0.15s; }
+.mini-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+.pointer-toggle[aria-checked=true] .mini-switch { background: var(--cheese-deep); }
+.pointer-toggle[aria-checked=true] .mini-switch::after { transform: translateX(12px); }
+.cheese-pointer svg { display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45)); }
+.cheese-pointer span { display: block; margin: 2px 0 0 14px; font-size: 11px; font-weight: 600; color: var(--ink); background: var(--cheese); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+
+/* Windows */
+.window {
+  position: absolute; z-index: 20; width: 440px; max-height: calc(100vh - 230px); display: flex; flex-direction: column;
+  background: var(--window); border: 0.5px solid var(--line); border-radius: 14px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.4); overflow: hidden;
+}
+.window[hidden] { display: none; }
+/* Each window has its own natural size, like real ones. The Read Me is the
+   one meant to scroll, so it gets a fixed height. */
+#win-readme { width: 460px; height: min(620px, calc(100vh - 230px)); }
+#win-settings { width: 380px; }
+#win-privacy { width: 420px; }
+#win-terminal { width: 560px; }
+#win-secret { width: 360px; }
+.secret-badge { display: inline-block; font-size: 12px; font-weight: 700; color: var(--ink); background: var(--cheese); border-radius: 999px; padding: 3px 10px; margin-bottom: 10px; }
+/* No visual hint beyond the cursor: finding it is the fun part. */
+.cheese-moon { cursor: pointer; }
+.titlebar { display: flex; align-items: center; height: 40px; padding: 0 14px; flex: none; cursor: grab; user-select: none; -webkit-user-select: none; border-bottom: 0.5px solid var(--line); }
+.titlebar:active { cursor: grabbing; }
+.titlebar .title { flex: 1; text-align: center; font-size: 13px; font-weight: 600; margin-right: 52px; }
+.lights { display: flex; gap: 8px; }
+.lights button, .lights span { width: 12px; height: 12px; border-radius: 50%; border: 0; padding: 0; display: block; }
+.lights .close { background: #FF5F57; cursor: pointer; }
+.lights .min { background: #FEBC2E; }
+.lights .max { background: #28C840; }
+.window .body { padding: 18px 22px 22px; overflow-y: auto; font-size: 14px; line-height: 1.55; }
+.window h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.window h3 { font-size: 14px; margin: 18px 0 4px; }
+.window p { margin: 6px 0; color: var(--text-2); }
+.window ul { margin: 6px 0; padding-left: 18px; color: var(--text-2); }
+.window li { margin: 4px 0; }
+.window li b { color: var(--text); font-weight: 600; }
+.window .body a { color: var(--accent); text-decoration: none; }
+.window .body a:hover { text-decoration: underline; }
+.tip { font-size: 12.5px; background: var(--group); border: 0.5px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; color: var(--text-2); }
+.tip b { color: var(--text); }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--group); color: var(--text-2); margin-left: 4px; }
+
+.terminal { background: #141518; color: #E6E6E6; font-family: var(--mono); font-size: 12.5px; }
+.terminal .titlebar { border-bottom-color: #2A2B30; color: #A1A1AA; }
+.terminal .body { line-height: 1.7; }
+.terminal .dim { color: #7B7D86; }
+.terminal .ok { color: #8FD16A; }
+.copy { font-family: var(--font); font-size: 11px; margin-left: 8px; padding: 2px 8px; border-radius: 6px; border: 1px solid #3A3B42; background: #1E1F24; color: #E6E6E6; cursor: pointer; }
+
+.settings-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.settings-header svg { width: 64px; height: 64px; flex: none; }
+.section-title { font-weight: 600; font-size: 13px; margin: 14px 0 6px; }
+.group { background: var(--group); border: 0.5px solid var(--line); border-radius: 9px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.switch { position: relative; width: 34px; height: 20px; border-radius: 999px; border: 0; background: var(--track); cursor: pointer; flex: none; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
+.switch[aria-checked=true] { background: var(--accent); }
+.switch[aria-checked=true]::after { transform: translateX(14px); }
+
+/* Dock */
+.dock {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 45;
+  display: flex; align-items: flex-end; gap: 10px; padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.22); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  border: 0.5px solid rgba(255, 255, 255, 0.35); border-radius: 22px;
+}
+.dock-item { position: relative; display: block; width: 56px; height: 56px; padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.15s; transform-origin: bottom; text-decoration: none; }
+.dock-item svg { width: 100%; height: 100%; display: block; }
+.dock-item:hover, .dock-item:focus-visible { transform: scale(1.22); }
+.dock-item .label {
+  position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  font-size: 12px; font-weight: 500; color: var(--text); background: var(--material); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--line); border-radius: 7px; padding: 4px 10px; opacity: 0; pointer-events: none; transition: opacity 0.1s;
+}
+.dock-item:hover .label, .dock-item:focus-visible .label { opacity: 1; }
+.dock-item .running { position: absolute; bottom: -6px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); }
+.dock-divider { width: 1px; height: 48px; background: rgba(255, 255, 255, 0.35); margin: 0 2px 4px; }
+
+.toast { position: absolute; top: 46px; left: 50%; transform: translateX(-50%); z-index: 70; background: var(--material); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 0.5px solid var(--line); border-radius: 12px; padding: 10px 16px; font-size: 13px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+.toast[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-item { transition: none; }
+}
+
+/* Phones and narrow windows: the desktop unfolds into a plain page. */
+@media (max-width: 820px) {
+  .desktop { display: flex; flex-direction: column; gap: 18px; padding: 50px 16px 28px; }
+  .wallpaper { position: fixed; }
+  .menubar .left span:not(.app), .menubar .clock, .menubar .wifi { display: none; }
+  .hero { position: relative; left: auto; top: auto; order: 1; padding-top: 18px; }
+  .menu, .menu[hidden] { position: relative; top: auto; left: auto !important; right: auto !important; display: block; width: 100%; order: 2; }
+  .wifi-menu, .wifi-menu[hidden] { display: none; }
+  .window, .window[hidden] { position: relative; display: flex; width: 100%; max-height: none; left: auto !important; top: auto !important; order: 3; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+  #win-readme, #win-settings, #win-privacy, #win-terminal, #win-secret { width: 100%; height: auto; }
+  #win-secret[hidden] { display: none; } /* stays a secret until found */
+  .titlebar { cursor: default; }
+  .cheese-pointer, .try-it, .toast { display: none; }
+  .dock { position: relative; left: auto; bottom: auto; transform: none; order: 4; align-self: center; flex-wrap: wrap; justify-content: center; }
+  .dock-item { width: 48px; height: 48px; }
+  .dock-item .label { opacity: 1; position: static; transform: none; display: block; margin-top: 6px; background: none; border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; color: #fff; padding: 0; font-size: 11px; text-align: center; }
+  .dock-item:hover { transform: none; }
+  .dock-item .running { display: none; }
+  .dock-divider { display: none; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="wedge" viewBox="0 0 64 64">
+      <g transform="translate(64 0) scale(-1 1)" fill-rule="evenodd" stroke-width="1.5" stroke-linejoin="round">
+        <path fill="var(--top, currentColor)" stroke="var(--top, currentColor)" d="M6 28L18 22.32A3.4 3.4 0 0 0 24 19.47L44 10L58 20Z M38 17.5a4 1.8 0 1 0 8 0a4 1.8 0 1 0 -8 0Z"/>
+        <path fill="var(--front, currentColor)" stroke="var(--front, currentColor)" d="M6 32L14 30.77A4.1 4.1 0 0 0 22 29.54L42 26.46A3.1 3.1 0 0 0 48 25.54L58 24V46L30 50.31A3.1 3.1 0 0 0 24 51.23L6 54Z M30.5 38a5.5 5.5 0 1 0 11 0a5.5 5.5 0 1 0 -11 0Z M50 36a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z"/>
+      </g>
+    </symbol>
+    <symbol id="wifi-glyph" viewBox="0 0 17 13">
+      <path d="M8.5 12.2l1.9-2.3a2.9 2.9 0 0 0-3.8 0z M2.2 5.2a9.5 9.5 0 0 1 12.6 0l-1.5 1.8a7.2 7.2 0 0 0-9.6 0z M5.1 8.6a5 5 0 0 1 6.8 0l-1.5 1.8a2.7 2.7 0 0 0-3.8 0z" fill="currentColor"/>
+    </symbol>
+    <symbol id="lock-glyph" viewBox="0 0 10 12">
+      <rect x="1" y="5" width="8" height="6.5" rx="1.5" fill="currentColor"/>
+      <path d="M2.8 5V3.6a2.2 2.2 0 0 1 4.4 0V5" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    </symbol>
+    <symbol id="app-icon" viewBox="0 0 64 64">
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="#25345C"/>
+      <svg x="7" y="7" width="50" height="50" style="--top:#FFE38A;--front:#F6BF3A"><use href="#wedge"/></svg>
+    </symbol>
+    <symbol id="readme-icon" viewBox="0 0 64 64">
+      <path d="M14 4h26l12 12v42a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#FDFDFD"/>
+      <path d="M40 4v10a2 2 0 0 0 2 2h10z" fill="#D9D9DE"/>
+      <g stroke="#B8B8C0" stroke-width="2.4" stroke-linecap="round"><path d="M20 26h24M20 33h24M20 40h18M20 47h22"/></g>
+      <svg x="18" y="8" width="16" height="16" style="--top:#F6BF3A;--front:#E2A51F"><use href="#wedge"/></svg>
+    </symbol>
+    <symbol id="settings-icon" viewBox="0 0 64 64">
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="#8E8E96"/>
+      <g fill="none" stroke="#F2F2F5" stroke-width="5" stroke-linecap="round"><circle cx="32" cy="32" r="9"/><path d="M32 12v6M32 46v6M12 32h6M46 32h6M18 18l4 4M42 42l4 4M18 46l4-4M42 22l4-4"/></g>
+    </symbol>
+    <symbol id="privacy-icon" viewBox="0 0 64 64">
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="#2F9E5B"/>
+      <rect x="20" y="29" width="24" height="19" rx="4" fill="#fff"/>
+      <path d="M25 29v-5a7 7 0 0 1 14 0v5" fill="none" stroke="#fff" stroke-width="4"/>
+    </symbol>
+    <symbol id="terminal-icon" viewBox="0 0 64 64">
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="#1C1D21"/>
+      <path d="M16 24l9 8-9 8" fill="none" stroke="#8FD16A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M30 41h16" stroke="#E6E6E6" stroke-width="4.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="source-icon" viewBox="0 0 64 64">
+      <rect x="2" y="2" width="60" height="60" rx="14" fill="#F2F2F5"/>
+      <path d="M24 22l-10 10 10 10M40 22l10 10-10 10M35 18l-6 28" fill="none" stroke="#25345C" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="desktop" id="desktop">
+  <svg class="wallpaper" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="1440" height="900" fill="#1B2A55"/>
+    <circle cx="1150" cy="250" r="190" fill="#F6BF3A" opacity="0.9"/>
+    <circle cx="1090" cy="200" r="34" fill="#E2A51F"/>
+    <circle cx="1235" cy="320" r="22" fill="#E2A51F"/>
+    <!-- Easter egg: this one hole answers "Why is it called Emmental?". The
+         invisible ring around it makes the small target a little easier to hit. -->
+    <g id="cheese-moon" class="cheese-moon">
+      <circle cx="1150" cy="380" r="14" fill="#E2A51F"/>
+      <circle cx="1150" cy="380" r="22" fill="transparent"/>
+    </g>
+    <path d="M0 560 Q360 430 720 520 T1440 470 V900 H0Z" fill="#22356B"/>
+    <path d="M0 680 Q420 580 820 660 T1440 640 V900 H0Z" fill="#1A2B5A"/>
+    <path d="M0 790 Q480 720 960 780 T1440 770 V900 H0Z" fill="#132148"/>
+  </svg>
+
+  <header class="menubar">
+    <div class="left"><span class="app">Emmental</span><span>File</span><span>Edit</span><span>View</span><span>Help</span></div>
+    <div class="right">
+      <button class="status active" id="status-wedge" aria-haspopup="true" aria-expanded="true" aria-label="Emmental menu">
+        <svg width="18" height="18" style="color:var(--text)"><use href="#wedge"/></svg>
+      </button>
+      <button class="status wifi" id="status-wifi" aria-haspopup="true" aria-expanded="false" aria-label="Wi-Fi"><svg width="17" height="13" viewBox="0 0 17 13" style="color:var(--text)"><use href="#wifi-glyph"/></svg></button>
+      <span class="clock" id="clock">Fri 9:41</span>
+    </div>
+  </header>
+
+  <div class="menu" id="menu" role="menu" aria-label="Emmental">
+    <div class="menu-section menu-head">
+      MX Master 3S M
+      <svg width="22" height="11" viewBox="0 0 22 11" aria-hidden="true"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" fill="none" stroke="currentColor"/><rect x="2" y="2" width="12.5" height="7" rx="1.2" fill="currentColor"/><rect x="19.5" y="3.5" width="1.6" height="4" rx="0.8" fill="currentColor"/></svg>
+      85%
+    </div>
+    <div class="menu-section">
+      <div class="slider-head"><span>Speed</span><output id="dpi-out">1900 DPI</output></div>
+      <input type="range" id="dpi" min="200" max="8000" step="50" value="1900" aria-label="Speed in DPI">
+    </div>
+    <div class="menu-section">
+      <div class="slider-head"><span>Acceleration</span><output id="accel-out">2.5</output></div>
+      <input type="range" id="accel" min="0" max="8" step="0.1" value="2.5" aria-label="Acceleration">
+      <div class="ticks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hint" id="accel-hint">System Settings tops out at 3.0</div>
+    </div>
+    <div class="menu-section">
+      <div class="slider-head"><span>Scroll speed</span><output id="scroll-out">1.0</output></div>
+      <input type="range" id="scroll" min="0" max="5" step="0.1" value="1" aria-label="Scroll speed">
+      <div class="ticks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hint">Scroll the Read Me window to feel it</div>
+    </div>
+    <hr>
+    <button class="menu-item" role="menuitem" data-open="settings">
+      <svg width="14" height="14" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><circle cx="32" cy="32" r="11"/><path d="M32 6v8M32 50v8M6 32h8M50 32h8M13 13l6 6M45 45l6 6M13 51l6-6M45 19l6-6"/></g></svg>
+      Settings…<kbd>⌘,</kbd>
+    </button>
+    <button class="menu-item" role="menuitem" id="quit">
+      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.5 4.5l5 5M9.5 4.5l-5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Quit Emmental<kbd>⌘Q</kbd>
+    </button>
+  </div>
+
+  <div class="menu wifi-menu" id="wifi-menu" role="menu" aria-label="Wi-Fi" hidden>
+    <div class="menu-section row" style="font-weight:600">Wi‑Fi<button class="switch" id="wifi-switch" role="switch" aria-checked="true" aria-label="Wi-Fi"></button></div>
+    <div id="wifi-networks">
+      <hr>
+      <div class="menu-section menu-head">Known Network</div>
+      <button class="menu-item network" role="menuitem"><span class="net-badge on"><svg width="12" height="9"><use href="#wifi-glyph"/></svg></span>Emmental Guest<svg class="net-lock" width="9" height="11"><use href="#lock-glyph"/></svg></button>
+      <div class="menu-section menu-head" style="margin-top:4px">Other Networks</div>
+      <div id="other-networks"></div>
+    </div>
+    <hr>
+    <button class="menu-item" role="menuitem" id="wifi-settings">Wi‑Fi Settings…</button>
+  </div>
+
+  <section class="hero">
+    <h1>Mouse tuning, without the bloat.</h1>
+    <p>Speed, scrolling and SmartShift for your mouse, from a 9 MB app in your menu bar. No updater, no account, no tracking.</p>
+    <div class="actions">
+      <a class="btn primary" href="Emmental.zip" download>Download free for Mac</a>
+      <button class="btn ghost" data-open="readme">What it does</button>
+    </div>
+    <div class="fineprint">macOS 12 or later · Version 0.1.0</div>
+    <div class="try-it">
+      <button class="pointer-toggle" id="pointer-toggle" role="switch" aria-checked="false">
+        <svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 1.5V13L5.8 10.3L7.8 14.3L9.5 13.5L7.5 9.5H11.3Z" fill="#FFD45C" stroke="#1A1405" stroke-width="1" stroke-linejoin="round"/></svg>
+        Cheese pointer<span class="mini-switch" aria-hidden="true"></span>
+      </button>
+      <span>Change Speed in the menu, then move your mouse.</span>
+    </div>
+  </section>
+  <div class="cheese-pointer" id="ghost" aria-hidden="true" hidden>
+    <svg width="26" height="26" viewBox="0 0 18 18"><path d="M3 1.5V13L5.8 10.3L7.8 14.3L9.5 13.5L7.5 9.5H11.3Z" fill="#FFD45C" stroke="#1A1405" stroke-width="1" stroke-linejoin="round"/></svg>
+    <span id="ghost-label">Move your mouse</span>
+  </div>
+
+  <div class="window" id="win-readme" role="dialog" aria-label="Read Me" hidden>
+    <div class="titlebar"><div class="lights"><button class="close" aria-label="Close"></button><span class="min"></span><span class="max"></span></div><div class="title">Read Me</div></div>
+    <div class="body" id="readme-body">
+      <div class="tip">Try it: change <b>Scroll speed</b> in the wedge menu, then scroll this window.</div>
+      <h2>What Emmental does</h2>
+      <p>One wedge in your menu bar, a few sliders, nothing running in the background. Free, and it stays that way.</p>
+      <h3>For any mouse</h3>
+      <ul>
+        <li><b>Acceleration</b> up to 8.0. System Settings stops at 3.0.</li>
+        <li><b>Scroll speed</b>, set per mouse.</li>
+        <li><b>Open at login</b>, and your settings come back after sleep and reconnects.</li>
+      </ul>
+      <h3>For Logitech mice <span class="tag">optional</span></h3>
+      <ul>
+        <li><b>Speed</b>: the sensor's real DPI, 200–8000 on the MX Master 3S, so every movement gets faster, not just flicks.</li>
+        <li><b>Battery level</b> next to the mouse name.</li>
+        <li><b>SmartShift</b>: whether the wheel switches to free-spin when you flick it, and how hard a flick it takes.</li>
+        <li>Over Bluetooth, with early support for Bolt and Unifying receivers.</li>
+      </ul>
+      <h3>What it doesn't do</h3>
+      <ul>
+        <li>No background updater, no login, no account.</li>
+        <li>No analytics. Emmental never connects to the internet.</li>
+        <li>About 9 MB of memory, all in.</li>
+      </ul>
+      <h2 style="margin-top:26px">Why Emmental exists</h2>
+      <p>Logitech's MX mice are great mice. The software around them can feel like a lot: Logi Options+ is a big app for a handful of settings, keeps helpers running in the background, and asks for updates more often than a mouse seems to need.</p>
+      <p>Over the years it adds up. The Mac this started on had collected more than 2 GB of Logitech software: Options+, the older Logitech Options, and G HUB, each with its own helpers, updaters and drivers. All for one mouse.</p>
+      <p>Yet the thing most people want is simply a faster pointer. Emmental does that, plus the few extras worth keeping: DPI, SmartShift and battery. It sits in the menu bar, uses about 9 MB, and asks for nothing.</p>
+      <h3>You can build one too</h3>
+      <p>Emmental was built in a couple of days with AI. It worked out Logitech's HID++ protocol by asking the mouse questions one careful, read-only step at a time, before changing anything.</p>
+      <p>If a gadget you own comes with an app you don't love, you probably don't need the whole suite. Describe the one thing you want, and build that. The source is on GitHub if you want a starting point.</p>
+      <h3>Found a bug? Want a feature?</h3>
+      <p>Emmental is free and built with AI, so it's tested on real hardware but not on every mouse out there. If something's off, or there's a setting you miss, <a href="https://github.com/Huseyinnurbaki/emmental/issues">open an issue on GitHub</a>.</p>
+
+      <h2 style="margin-top:26px">Questions</h2>
+      <h3>What's the difference between Speed and Acceleration?</h3>
+      <p>Speed is the sensor's DPI: how far the pointer moves for every millimetre the mouse moves, slow or fast. Acceleration only boosts fast movements, so flicks travel further while small, careful movements stay precise. Most people want a higher Speed and a moderate Acceleration.</p>
+      <h3>Why can it go past 3.0 when System Settings can't?</h3>
+      <p>macOS stores acceleration on each mouse and accepts higher values; the System Settings slider just stops at 3.0. Emmental sets the same value, per mouse, up to 8.0.</p>
+      <h3>Does it work with my mouse?</h3>
+      <p>Acceleration and scroll speed work with any external mouse. Speed (DPI), battery and SmartShift need a Logitech mouse that speaks HID++, like the MX Master series. It's built and tested on an MX Master 3S over Bluetooth.</p>
+      <h3>Why does it want Input Monitoring?</h3>
+      <p>Only for the Logitech features, and only if you turn them on. Changing DPI means talking to the mouse directly, and macOS puts that behind Input Monitoring. The Privacy window in the Dock has the details.</p>
+      <h3>Will my settings survive a restart or sleep?</h3>
+      <p>Yes. Emmental reapplies them when it starts, when the Mac wakes, and when the mouse reconnects. It also checks every few seconds that macOS hasn't quietly put its own values back.</p>
+      <h3>Do I still need Logi Options+?</h3>
+      <p>Not for speed, scrolling, SmartShift or battery. If you rely on custom button mappings or gestures, keep it for now; Emmental doesn't do those.</p>
+      <h3>Why does macOS say it can't verify the developer?</h3>
+      <p>Emmental isn't notarized by Apple yet. Open it once from System Settings › Privacy &amp; Security › Open Anyway, or build it from source; the Install window in the Dock has both.</p>
+      <h3>How heavy is it, really?</h3>
+      <p>About 9 MB of memory with the menu open or closed, no helper processes, and the download is about a megabyte.</p>
+      <h3>Why is it called Emmental?</h3>
+      <p>The answer is hidden somewhere on this page. Hint: look closely at the cheesiest thing on the desktop.</p>
+      <p style="margin-top:22px;color:var(--text-3)">You reached the bottom. Your scroll wheel works.</p>
+    </div>
+  </div>
+
+  <div class="window" id="win-settings" role="dialog" aria-label="Emmental Settings" hidden>
+    <div class="titlebar"><div class="lights"><button class="close" aria-label="Close"></button><span class="min"></span><span class="max"></span></div><div class="title">Emmental Settings</div></div>
+    <div class="body">
+      <div class="settings-header"><svg><use href="#app-icon"/></svg><div><div style="font-weight:600;font-size:17px">Emmental</div><div style="font-size:12px;color:var(--text-2)">Version 0.1.0 (1)</div><div style="font-size:12px;color:var(--text-2)">Mouse tuning without the bloat.</div></div></div>
+      <div class="section-title">Scroll wheel</div>
+      <div class="group">
+        <div class="row"><span>SmartShift</span><button class="switch" id="smartshift" role="switch" aria-checked="true" aria-label="SmartShift"></button></div>
+        <div class="hint" style="margin-top:-4px">Switches the wheel to free-spin when you flick it. The button under the wheel still switches by hand.</div>
+        <div>
+          <div class="slider-head"><span>Free-spin threshold</span><output id="threshold-out">10</output></div>
+          <input type="range" id="threshold" min="1" max="50" step="1" value="10" aria-label="Free-spin threshold">
+          <div class="hint">Lower switches to free-spin with a gentler flick.</div>
+        </div>
+        <div class="row"><span>High-resolution scrolling</span><button class="switch" role="switch" aria-checked="false" aria-label="High-resolution scrolling"></button></div>
+        <div class="hint" style="margin-top:-4px">Experimental. On macOS this may make scrolling much faster.</div>
+      </div>
+      <div class="section-title">General</div>
+      <div class="group"><div class="row"><span>Open at login</span><button class="switch" role="switch" aria-checked="true" aria-label="Open at login"></button></div></div>
+    </div>
+  </div>
+
+  <div class="window" id="win-secret" role="dialog" aria-label="Why Emmental" hidden>
+    <div class="titlebar"><div class="lights"><button class="close" aria-label="Close"></button><span class="min"></span><span class="max"></span></div><div class="title">Why Emmental.txt</div></div>
+    <div class="body">
+      <div class="secret-badge">🧀 You found it</div>
+      <h2>Why is it called Emmental?</h2>
+      <p><b>Because your mouse has standards.</b></p>
+    </div>
+  </div>
+
+  <div class="window" id="win-privacy" role="dialog" aria-label="Privacy" hidden>
+    <div class="titlebar"><div class="lights"><button class="close" aria-label="Close"></button><span class="min"></span><span class="max"></span></div><div class="title">Privacy</div></div>
+    <div class="body">
+      <h2>What Emmental can see</h2>
+      <p>Acceleration and scroll speed use public macOS APIs and need no permissions at all.</p>
+      <h3>Logitech features need Input Monitoring</h3>
+      <p>DPI, battery and SmartShift are settings on the mouse itself. Emmental talks to the mouse with Logitech's HID++ protocol, and macOS only allows that with Input Monitoring permission. Apple's prompt says the app wants to "receive keystrokes from any application", which is the standard wording for any app that reads input devices directly.</p>
+      <p>Emmental only opens your Logitech mouse's settings channel, and only sends requests to read and change those settings. The Logitech features stay off until you turn them on.</p>
+      <h3>Nothing leaves your Mac</h3>
+      <p>No analytics, no crash reporting, no account. Emmental makes no network connections.</p>
+    </div>
+  </div>
+
+  <div class="window terminal" id="win-terminal" role="dialog" aria-label="Install" hidden>
+    <div class="titlebar"><div class="lights"><button class="close" aria-label="Close"></button><span class="min"></span><span class="max"></span></div><div class="title">Install — zsh</div></div>
+    <div class="body">
+      <div class="dim"># 1. Download and unzip, then move Emmental to Applications</div>
+      <div>$ open Emmental.zip</div>
+      <div class="dim" style="margin-top:12px"># 2. First launch: macOS blocks apps that aren't notarized.</div>
+      <div class="dim">#    Open System Settings › Privacy &amp; Security, scroll down,</div>
+      <div class="dim">#    and click "Open Anyway" next to Emmental. Only once.</div>
+      <div class="dim" style="margin-top:12px"># Or build it yourself from source:</div>
+      <div>$ git clone https://github.com/Huseyinnurbaki/emmental<button class="copy" data-copy="git clone https://github.com/Huseyinnurbaki/emmental && cd emmental && make install">copy</button></div>
+      <div>$ cd emmental &amp;&amp; make install</div>
+      <div class="ok" style="margin-top:12px">✓ Emmental is in your menu bar. Look for the wedge.</div>
+    </div>
+  </div>
+
+  <nav class="dock" aria-label="Sections">
+    <a class="dock-item" href="Emmental.zip" download><svg><use href="#app-icon"/></svg><span class="label">Download Emmental</span><span class="running"></span></a>
+    <button class="dock-item" data-open="readme"><svg><use href="#readme-icon"/></svg><span class="label">Read Me</span></button>
+    <button class="dock-item" data-open="settings"><svg><use href="#settings-icon"/></svg><span class="label">Settings</span></button>
+    <button class="dock-item" data-open="privacy"><svg><use href="#privacy-icon"/></svg><span class="label">Privacy</span></button>
+    <button class="dock-item" data-open="terminal"><svg><use href="#terminal-icon"/></svg><span class="label">Install</span></button>
+    <span class="dock-divider" aria-hidden="true"></span>
+    <a class="dock-item" href="https://github.com/Huseyinnurbaki/emmental"><svg><use href="#source-icon"/></svg><span class="label">Source on GitHub</span></a>
+  </nav>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const isDesktop = () => window.innerWidth > 820;
+
+  // Menu bar: the wedge opens and closes the Emmental menu, like the real one.
+  const menu = $('#menu'), wedge = $("#status-wedge");
+  function placeMenu() {
+    const r = wedge.getBoundingClientRect();
+    menu.style.right = 'auto';
+    menu.style.left = Math.max(8, Math.min(r.left - 6, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+  }
+  function setMenu(open) {
+    menu.hidden = !open;
+    wedge.classList.toggle('active', open);
+    wedge.setAttribute('aria-expanded', String(open));
+    if (open) { setWifi(false); placeMenu(); }
+  }
+  wedge.addEventListener('click', (e) => { e.stopPropagation(); setMenu(menu.hidden); });
+  document.addEventListener('click', (e) => {
+    if (!isDesktop()) return;
+    if (!menu.hidden && !menu.contains(e.target) && !wedge.contains(e.target)) setMenu(false);
+    if (!wifiMenu.hidden && !wifiMenu.contains(e.target) && !wifiButton.contains(e.target)) setWifi(false);
+  });
+
+  // Wi-Fi: a network list, mostly for the network names.
+  const wifiMenu = $('#wifi-menu'), wifiButton = $('#status-wifi');
+  const networks = [
+    ['Brie-Fi', true],
+    ['Gouda Connection', true],
+    ['Pretty Fly for a Wi-Fi', false],
+    ['The Mouse Trap', false],
+    ['Holey Internet 5G', true],
+    ['The LAN Before Time', true],
+    ['Cheddar Get Off My LAN', true],
+    ['Free Cheese, Not a Trap', false],
+  ];
+  networks.forEach(([name, locked]) => {
+    const item = document.createElement('button');
+    item.className = 'menu-item network';
+    item.setAttribute('role', 'menuitem');
+    item.innerHTML = '<span class="net-badge"><svg width="12" height="9"><use href="#wifi-glyph"/></svg></span>';
+    item.append(name);
+    if (locked) item.insertAdjacentHTML('beforeend', '<svg class="net-lock" width="9" height="11"><use href="#lock-glyph"/></svg>');
+    item.addEventListener('click', () => {
+      setWifi(false);
+      showToast(locked ? `"${name}" wants a password. Try "cheese".` : `Joining "${name}"… just kidding, this is a website.`);
+    });
+    $('#other-networks').append(item);
+  });
+  wifiMenu.querySelector('.network').addEventListener('click', () => { setWifi(false); showToast("You're already on Emmental Guest."); });
+  $('#wifi-settings').addEventListener('click', () => { setWifi(false); showToast('System Settings would open here, if this were a Mac.'); });
+  function setWifi(open) {
+    wifiMenu.hidden = !open;
+    wifiButton.classList.toggle('active', open);
+    wifiButton.setAttribute('aria-expanded', String(open));
+    if (!open) return;
+    setMenu(false);
+    const r = wifiButton.getBoundingClientRect();
+    wifiMenu.style.right = 'auto';
+    wifiMenu.style.left = Math.max(8, Math.min(r.left - 6, window.innerWidth - wifiMenu.offsetWidth - 8)) + 'px';
+  }
+  wifiButton.addEventListener('click', (e) => { e.stopPropagation(); setWifi(wifiMenu.hidden); });
+
+  // Sliders: keep the blue fill and the readout in sync.
+  function bind(id, format, onChange) {
+    const input = $('#' + id), out = $('#' + id + '-out');
+    const update = () => {
+      const v = +input.value;
+      input.style.setProperty('--p', ((v - input.min) / (input.max - input.min)) * 100 + '%');
+      if (out) out.textContent = format(v);
+      onChange && onChange(v);
+    };
+    input.addEventListener('input', update);
+    update();
+  }
+
+  // The cheese pointer shows how far the same hand movement would travel with
+  // these settings. Each movement starts at your real cursor (after a short
+  // pause, or when you come back from the menu, a window or the Dock), then
+  // Speed scales every step (1000 DPI is 1:1) and Acceleration adds extra gain
+  // to fast ones. Your hand drives it, so it also works with Reduce Motion on.
+  const ghost = $('#ghost'), ghostLabel = $('#ghost-label'), pointerToggle = $('#pointer-toggle');
+  const strokePause = 350; // ms without movement before the next one starts fresh
+  let dpi = 1900, accel = 2.5, lastMove = 0, pointerOn = false, gx = 0, gy = 0;
+  function setPointer(on) {
+    pointerOn = on;
+    pointerToggle.setAttribute('aria-checked', String(on));
+    ghost.hidden = true; // shows again on the next movement
+    lastMove = 0;
+  }
+  pointerToggle.addEventListener('click', () => setPointer(!pointerOn));
+  bind('dpi', (v) => v + ' DPI', (v) => { dpi = v; });
+  bind('accel', (v) => v.toFixed(1), (v) => {
+    accel = v;
+    $('#accel-hint').textContent = v > 3 ? 'Past what System Settings allows' : 'System Settings tops out at 3.0';
+  });
+  // Touching Speed or Acceleration is when you'd want to see the effect.
+  ['#dpi', '#accel'].forEach((id) => $(id).addEventListener('input', () => { if (!pointerOn) setPointer(true); }));
+
+  document.addEventListener('pointermove', (e) => {
+    // Using the menu, windows and Dock ends a movement instead of flinging it.
+    if (!pointerOn || !isDesktop() || e.pointerType !== 'mouse' ||
+        e.target.closest('.menu, .window, .dock, .menubar, .pointer-toggle')) {
+      lastMove = 0;
+      return;
+    }
+    const dt = e.timeStamp - lastMove;
+    if (!lastMove || dt > strokePause) {
+      gx = e.clientX;
+      gy = e.clientY;
+    } else {
+      const velocity = Math.hypot(e.movementX, e.movementY) / Math.max(4, dt); // px per ms
+      const gain = (dpi / 1000) * (1 + (accel / 8) * Math.min(velocity, 2.5) * 1.6);
+      gx = Math.min(Math.max(gx + e.movementX * gain, 0), window.innerWidth - 24);
+      gy = Math.min(Math.max(gy + e.movementY * gain, 34), window.innerHeight - 30);
+    }
+    lastMove = e.timeStamp;
+    ghost.hidden = false;
+    ghost.style.transform = `translate(${gx}px, ${gy}px)`;
+    ghostLabel.textContent = `${dpi} DPI · ${accel.toFixed(1)}`;
+  });
+
+  // Scroll speed scales wheel scrolling inside the Read Me window.
+  let scrollFactor = 1;
+  bind('scroll', (v) => v.toFixed(1), (v) => { scrollFactor = 0.2 + 0.8 * v; });
+  $('#readme-body').addEventListener('wheel', (e) => {
+    e.preventDefault();
+    e.currentTarget.scrollTop += e.deltaY * scrollFactor;
+  }, { passive: false });
+
+  // Settings window controls.
+  bind('threshold', (v) => String(v));
+  const smartShift = $('#smartshift');
+  document.querySelectorAll('.switch').forEach((s) => s.addEventListener('click', () => {
+    s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true'));
+    const on = s.getAttribute('aria-checked') === 'true';
+    if (s === smartShift) $('#threshold').disabled = !on;
+    if (s.id === 'wifi-switch') {
+      $('#wifi-networks').hidden = !on;
+      wifiButton.classList.toggle('off', !on);
+    }
+  }));
+
+  // Windows: open from the Dock or the menu, drag by the title bar, close with red.
+  // A new window looks for empty desktop first, so they don't pile up.
+  let z = 30;
+  const openWindows = () => [...document.querySelectorAll('.window:not([hidden])')];
+  const overlaps = (a, b, pad = 14) =>
+    a.left < b.right + pad && b.left < a.right + pad && a.top < b.bottom + pad && b.top < a.bottom + pad;
+
+  // Candidate spots on a grid, nearest to the right of the headline first.
+  function findSpot(win, blockers) {
+    const w = win.offsetWidth, h = win.offsetHeight;
+    const top = 46, bottom = $('.dock').getBoundingClientRect().top - 12;
+    const prefer = { x: window.innerWidth * 0.62 - w / 2, y: top + 30 };
+    const spots = [];
+    for (let x = 16; x + w <= window.innerWidth - 16; x += 24) {
+      for (let y = top; y + h <= bottom; y += 20) spots.push({ x, y });
+    }
+    spots.sort((a, b) => Math.hypot(a.x - prefer.x, a.y - prefer.y) - Math.hypot(b.x - prefer.x, b.y - prefer.y));
+    return spots.find(({ x, y }) => {
+      const rect = { left: x, top: y, right: x + w, bottom: y + h };
+      return !blockers.some((b) => overlaps(rect, b));
+    });
+  }
+
+  // Empty desktop first, then allow covering the headline, and only when the
+  // screen is full, take the place of the window looked at least recently.
+  function place(win) {
+    const others = openWindows().filter((o) => o !== win);
+    const windowRects = others.map((o) => o.getBoundingClientRect());
+    const hero = $('.hero').getBoundingClientRect();
+    let spot = findSpot(win, [hero, ...windowRects]) || findSpot(win, windowRects);
+    if (!spot && others.length) {
+      const oldest = others.sort((a, b) => a.style.zIndex - b.style.zIndex)[0];
+      spot = { x: oldest.offsetLeft, y: oldest.offsetTop };
+      oldest.hidden = true;
+    }
+    spot = spot || { x: 16, y: 46 };
+    win.style.left = spot.x + 'px';
+    win.style.top = spot.y + 'px';
+  }
+
+  function openWindow(name) {
+    const win = $('#win-' + name);
+    if (!win) return;
+    if (isDesktop()) setMenu(false);
+    if (win.hidden && isDesktop()) {
+      // Measure it invisibly before choosing where it goes.
+      win.style.visibility = 'hidden';
+      win.hidden = false;
+      place(win);
+      win.style.visibility = '';
+    }
+    win.hidden = false;
+    win.style.zIndex = ++z;
+    if (!isDesktop()) win.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.querySelectorAll('[data-open]').forEach((el) => el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openWindow(el.dataset.open);
+  }));
+  $('#cheese-moon').addEventListener('click', (e) => { e.stopPropagation(); openWindow('secret'); });
+  document.querySelectorAll('.window').forEach((win) => {
+    win.addEventListener('pointerdown', () => { win.style.zIndex = ++z; });
+    win.querySelector('.close').addEventListener('click', () => { win.hidden = true; });
+    const bar = win.querySelector('.titlebar');
+    bar.addEventListener('pointerdown', (e) => {
+      if (!isDesktop() || e.target.closest('button')) return;
+      const startX = e.clientX - win.offsetLeft, startY = e.clientY - win.offsetTop;
+      const move = (ev) => {
+        win.style.left = Math.max(-300, Math.min(ev.clientX - startX, window.innerWidth - 120)) + 'px';
+        win.style.top = Math.max(32, Math.min(ev.clientY - startY, window.innerHeight - 60)) + 'px';
+      };
+      const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+      addEventListener('pointermove', move);
+      addEventListener('pointerup', up);
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const open = [...document.querySelectorAll('.window:not([hidden])')].sort((a, b) => b.style.zIndex - a.style.zIndex)[0];
+      if (open && isDesktop()) open.hidden = true; else setMenu(false);
+    }
+  });
+
+  // Quit, gently refused.
+  const toast = $('#toast');
+  function showToast(text) {
+    toast.textContent = text;
+    toast.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { toast.hidden = true; }, 2600);
+  }
+  $('#quit').addEventListener('click', () => {
+    setMenu(false);
+    showToast("Nice try. It's only 9 MB, let it stay.");
+  });
+
+  // Copy buttons in the Install window.
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+    navigator.clipboard && navigator.clipboard.writeText(b.dataset.copy).then(() => {
+      b.textContent = 'copied';
+      setTimeout(() => { b.textContent = 'copy'; }, 1500);
+    });
+  }));
+
+  // A live clock in the menu bar, because it's a desktop.
+  const clock = $('#clock');
+  const tick = () => { clock.textContent = new Date().toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
+  tick();
+  setInterval(tick, 15000);
+
+  window.addEventListener('resize', () => { if (!menu.hidden) placeMenu(); });
+  setMenu(true);
+})();
+</script>
+</body>
+</html>

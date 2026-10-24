@@ -109,3 +109,7 @@ doesn't point into `build/`.
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -1,0 +1,63 @@
+<!doctype html>
+<!-- Source for landing/og.png, the 1200×630 link preview card. Re-render with:
+     make og -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body { position: relative; background: #1B2A55; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  .wallpaper { position: absolute; inset: 0; }
+  .text { position: absolute; left: 80px; top: 92px; width: 600px; }
+  .brand { display: flex; align-items: center; gap: 18px; font-size: 34px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand svg { width: 76px; height: 76px; }
+  h1 { font-size: 72px; line-height: 1.02; letter-spacing: -0.035em; margin: 34px 0 0; font-weight: 800; }
+  .sub { font-size: 26px; line-height: 1.35; color: rgba(255,255,255,0.78); margin-top: 24px; }
+  .chips { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+  .chips span { font-size: 19px; font-weight: 600; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); }
+  .chips span.cheese { background: #FFD45C; color: #1A1405; border-color: #FFD45C; }
+  .menu { position: absolute; right: 70px; top: 120px; width: 360px; background: rgba(246,246,248,0.93); color: #1D1D1F; border-radius: 18px; padding: 18px 24px 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.35); }
+  .head { font-size: 15px; color: #6E6E73; }
+  .row { display: flex; gap: 10px; align-items: baseline; font-size: 19px; margin-top: 18px; }
+  .row b { font-weight: 500; }
+  .row span { color: #6E6E73; }
+  .track { height: 6px; border-radius: 3px; background: #D9D9DE; margin-top: 12px; position: relative; }
+  .track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: #0A84FF; }
+  .track em { position: absolute; top: -10px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.3); }
+  .domain { position: absolute; left: 80px; bottom: 44px; font-size: 20px; color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+  <svg class="wallpaper" viewBox="0 0 1200 630" aria-hidden="true">
+    <circle cx="960" cy="200" r="190" fill="#F6BF3A" opacity="0.9"/>
+    <circle cx="900" cy="150" r="34" fill="#E2A51F"/>
+    <circle cx="1045" cy="270" r="22" fill="#E2A51F"/>
+    <circle cx="960" cy="330" r="14" fill="#E2A51F"/>
+    <path d="M0 430 Q300 330 600 400 T1200 360 V630 H0Z" fill="#22356B"/>
+    <path d="M0 510 Q350 440 680 500 T1200 480 V630 H0Z" fill="#1A2B5A"/>
+    <path d="M0 580 Q400 530 800 570 T1200 565 V630 H0Z" fill="#132148"/>
+  </svg>
+
+  <div class="text">
+    <div class="brand">
+      <svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#25345C"/><g transform="translate(7 7) scale(0.78125) translate(64 0) scale(-1 1)" fill-rule="evenodd" stroke-width="1.5" stroke-linejoin="round"><path fill="#FFE38A" stroke="#FFE38A" d="M6 28L18 22.32A3.4 3.4 0 0 0 24 19.47L44 10L58 20Z M38 17.5a4 1.8 0 1 0 8 0a4 1.8 0 1 0 -8 0Z"/><path fill="#F6BF3A" stroke="#F6BF3A" d="M6 32L14 30.77A4.1 4.1 0 0 0 22 29.54L42 26.46A3.1 3.1 0 0 0 48 25.54L58 24V46L30 50.31A3.1 3.1 0 0 0 24 51.23L6 54Z M30.5 38a5.5 5.5 0 1 0 11 0a5.5 5.5 0 1 0 -11 0Z M50 36a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z"/></g></svg>
+      Emmental
+    </div>
+    <h1>Mouse tuning, without the bloat.</h1>
+    <div class="sub">A 9 MB menu bar app for your Mac.<br>No updater, no account, no tracking.</div>
+    <div class="chips"><span class="cheese">Free</span><span>Speed &amp; DPI</span><span>Scrolling</span><span>SmartShift</span></div>
+  </div>
+
+  <div class="menu">
+    <div class="head">MX Master 3S M &nbsp;·&nbsp; 85%</div>
+    <div class="row"><b>Speed</b><span>1900 DPI</span></div>
+    <div class="track"><i style="width:22%"></i><em style="left:22%"></em></div>
+    <div class="row"><b>Acceleration</b><span>2.5</span></div>
+    <div class="track"><i style="width:31%"></i><em style="left:31%"></em></div>
+    <div class="row"><b>Scroll speed</b><span>1.0</span></div>
+    <div class="track" style="margin-bottom:10px"><i style="width:20%"></i><em style="left:20%"></em></div>
+  </div>
+
+  <div class="domain">emmental.artichoke.monster</div>
+</body>
+</html>

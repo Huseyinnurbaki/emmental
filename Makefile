@@ -6,7 +6,7 @@ APP := build/Emmental.app
 SIGN_IDENTITY ?= Emmental Dev
 SIGN := $(shell security find-identity -v -p codesigning | grep -q '"$(SIGN_IDENTITY)"' && echo '$(SIGN_IDENTITY)' || echo -)
 
-.PHONY: app run install icon clean
+.PHONY: app run install icon og clean
 
 app:
 	swift build -c release
@@ -32,6 +32,12 @@ icon:
 	rm -rf build/AppIcon.iconset
 	build/AppIcon build/AppIcon.iconset
 	iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
+
+# Re-renders landing/og.png, the link preview card, from scripts/og-image.html.
+og:
+	"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu \
+		--hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 \
+		--screenshot="$(CURDIR)/landing/og.png" "file://$(CURDIR)/scripts/og-image.html"
 
 clean:
 	rm -rf .build build
