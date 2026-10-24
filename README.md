@@ -44,9 +44,18 @@ Intel Mac, so far; testing on Apple silicon is on the [roadmap](ROADMAP.md).
 make release   # universal (Intel + Apple silicon), signed: build/release/Emmental.zip
 ```
 
-Releases are built by GitHub Actions: pushing a `v*` tag runs
-`.github/workflows/release.yml`, which builds that universal zip and attaches it
-to a GitHub release. The website's Download button always points at the latest.
+Releases are built by GitHub Actions. To publish one:
+
+```bash
+make bump VERSION=0.2.0   # app, website and version.json all say 0.2.0
+git commit -am "Release 0.2.0" && git push
+git tag -a v0.2.0 -m "Emmental 0.2.0" && git push origin v0.2.0
+```
+
+The tag runs `.github/workflows/release.yml`, which builds the universal zip and
+attaches it to a GitHub release. The website's Download button always points at
+the latest, and **Check for Updates** in the app reads the website's
+`version.json`. The workflow stops if the tag doesn't match the app's version.
 
 ```bash
 make run       # build build/Emmental.app and launch it

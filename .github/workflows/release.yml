@@ -22,6 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check the tag matches the app's version
+        run: |
+          APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Resources/Info.plist)
+          if [ "$APP_VERSION" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "Tag $GITHUB_REF_NAME doesn't match Info.plist ($APP_VERSION). Run make bump VERSION=${GITHUB_REF_NAME#v} first."
+            exit 1
+          fi
+
       - name: Import signing identity
         env:
           SIGNING_P12: ${{ secrets.SIGNING_P12 }}

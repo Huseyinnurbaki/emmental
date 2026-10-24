@@ -1,7 +1,8 @@
 # Contributing to Emmental
 
 Thanks for helping. Emmental stays small on purpose: a few mouse settings people
-actually use, nothing running in the background, no network access. Changes that
+actually use, nothing running in the background, no network access beyond the
+manual update check. Changes that
 keep it that way are the easiest to merge.
 
 ## Reporting how your mouse works

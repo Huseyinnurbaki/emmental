@@ -26,6 +26,10 @@ final class SettingsWindowController: NSWindowController {
     private let highResolutionHint = SettingsWindowController.hintLabel(
         "Experimental. On macOS this may make scrolling much faster.")
     private let loginRow = SwitchRowView(title: "Open at login")
+    private let updateStatus = NSTextField(labelWithString: "")
+    private let updateButton = NSButton(title: "Check for Updates", target: nil, action: nil)
+    /// Set once a newer version is found; the button then opens the website.
+    private var downloadURL: URL?
     private let content = NSView()
 
     init() {
@@ -58,7 +62,7 @@ final class SettingsWindowController: NSWindowController {
             wheelTitle,
             wheelGroup,
             Self.sectionTitle("General"),
-            Self.group([loginRow]),
+            Self.group([loginRow, updateRow()]),
         ])
         stack.orientation = .vertical
         stack.alignment = .leading
@@ -84,6 +88,42 @@ final class SettingsWindowController: NSWindowController {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// "Version 0.1.0 · [Check for Updates]", becoming "Version 0.2.0 is
+    /// available · [Download]" when there's something newer.
+    private func updateRow() -> NSView {
+        updateStatus.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        updateStatus.textColor = .secondaryLabelColor
+        updateStatus.stringValue = "Version \(UpdateCheck.currentVersion)"
+        updateButton.bezelStyle = .rounded
+        updateButton.controlSize = .small
+        updateButton.target = self
+        updateButton.action = #selector(checkForUpdates)
+        return NSStackView(views: [updateStatus, NSView(), updateButton])
+    }
+
+    @objc private func checkForUpdates() {
+        if let url = downloadURL {
+            NSWorkspace.shared.open(url)
+            return
+        }
+        updateButton.isEnabled = false
+        updateStatus.stringValue = "Checking…"
+        UpdateCheck.run { [weak self] result in
+            guard let self = self else { return }
+            self.updateButton.isEnabled = true
+            switch result {
+            case .upToDate(let version):
+                self.updateStatus.stringValue = "You're up to date (\(version))."
+            case let .available(version, download):
+                self.updateStatus.stringValue = "Version \(version) is available."
+                self.updateButton.title = "Download"
+                self.downloadURL = download
+            case .failed:
+                self.updateStatus.stringValue = "Couldn't check. Try again later."
+            }
+        }
+    }
 
     func show() {
         loginRow.isOn = LoginItem.isEnabled

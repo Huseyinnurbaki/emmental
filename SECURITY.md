@@ -41,11 +41,15 @@ so you can judge reports, and the app, against it.
   device sends, including ordinary mouse movement; Emmental only processes
   HID++ replies (report IDs `0x10` and `0x11`) and drops everything else without
   storing it. It doesn't open keyboards or any other devices.
-- **No network access.** Emmental makes no network connections: no analytics,
-  no crash reporting, no updater.
+- **One network request, and only when you ask.** Clicking **Check for Updates**
+  in Settings fetches `https://emmental.artichoke.monster/version.json` over
+  HTTPS, with no cookies and nothing sent beyond the request itself. Otherwise
+  Emmental makes no network connections: no analytics, no crash reporting, no
+  background updater, nothing downloaded or installed on its own.
 - **Open at login** writes one file, `~/Library/LaunchAgents/app.emmental.Emmental.plist`,
   and deletes it when you turn the setting off.
 - **Settings** are stored in Emmental's own preferences (`app.emmental.Emmental`).
 
 Anything that makes Emmental read input it doesn't need, touch devices other
-than the ones above, reach the network, or run code it shouldn't is in scope.
+than the ones above, reach the network other than that one check, or run code it
+shouldn't is in scope.

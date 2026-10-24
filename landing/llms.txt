@@ -12,7 +12,8 @@
   free-spin threshold, battery level, and experimental high-resolution scrolling. Uses
   Logitech's HID++ 2.0 protocol over Bluetooth, with early support for Bolt and Unifying receivers.
 - Settings are reapplied at login, after sleep and when the mouse reconnects.
-- Makes no network connections; no analytics.
+- No analytics. The only network request is a manual "Check for Updates" in Settings,
+  which reads a small version file from the website.
 - A lightweight alternative to Logi Options+ for people who only need speed, scrolling and
   SmartShift. It does not do button remapping or gestures.
 

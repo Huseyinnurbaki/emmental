@@ -40,10 +40,9 @@ What's next for Emmental, roughly in order.
 - [ ] Decide on high-resolution scrolling: if macOS doesn't scale the 15× steps
       down, drop it, or scale wheel events ourselves (needs Accessibility)
 - [ ] Test receiver support on real hardware
-- [ ] **Check for Updates** button in Settings. Reads `version.json` from the
-      website and compares it to `CFBundleShortVersionString`; shows "You're up
-      to date" or links to the download. Manual only: no background updater, no
-      auto-install. Works even while the repo is private.
+- [x] **Check for Updates** in Settings: reads the website's `version.json` and
+      compares it with the app's version; "You're up to date" or a Download
+      button that opens the website. Manual only, no cookies, no background checks.
 
 ## Website (emmental.artichoke.monster)
 
@@ -71,7 +70,9 @@ What's next for Emmental, roughly in order.
 - [x] Release workflow (`.github/workflows/release.yml`): on each `v*` tag, builds
       a universal app signed with the Emmental Dev identity (from the
       `SIGNING_P12` secrets) and attaches `Emmental.zip` to a GitHub release
-- [ ] First release: add the two secrets, then `git tag v0.1.0 && git push origin v0.1.0`
+- [x] First release: v0.1.0, built and signed by the workflow
+- [x] `make bump VERSION=x.y.z` sets the version in the app, `version.json` and the
+      page; the workflow refuses a tag that doesn't match the app's version
 - [ ] CHANGELOG.md, starting with the first release
 - [ ] README: screenshots of the menu and the Settings window, plus the "Open
       Anyway" steps

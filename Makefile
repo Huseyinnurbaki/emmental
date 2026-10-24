@@ -6,7 +6,7 @@ APP := build/Emmental.app
 SIGN_IDENTITY ?= Emmental Dev
 SIGN := $(shell security find-identity -v -p codesigning | grep -q '"$(SIGN_IDENTITY)"' && echo '$(SIGN_IDENTITY)' || echo -)
 
-.PHONY: app run install release icon og clean
+.PHONY: app run install release bump icon og clean
 
 app:
 	swift build -c release
@@ -43,6 +43,11 @@ release:
 	ditto -c -k --keepParent $(RELEASE_APP) $(RELEASE)/Emmental.zip
 	@lipo -archs $(RELEASE_APP)/Contents/MacOS/Emmental
 	@echo "Built $(RELEASE)/Emmental.zip"
+
+# Sets the version in the app, the website and its structured data at once.
+#   make bump VERSION=0.2.0
+bump:
+	scripts/bump-version.sh "$(VERSION)"
 
 # Regenerates Resources/AppIcon.icns from the wedge geometry in WedgeIcon.swift.
 icon:

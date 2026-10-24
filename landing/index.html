@@ -225,6 +225,7 @@ input[type=range]:disabled { opacity: 0.4; }
 .section-title { font-weight: 600; font-size: 13px; margin: 14px 0 6px; }
 .group { background: var(--group); border: 0.5px solid var(--line); border-radius: 9px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
 .row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.small-btn { font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 0.5px solid var(--line); background: var(--window); color: var(--text); cursor: pointer; box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.15); }
 .switch { position: relative; width: 34px; height: 20px; border-radius: 999px; border: 0; background: var(--track); cursor: pointer; flex: none; }
 .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
 .switch[aria-checked=true] { background: var(--accent); }
@@ -443,7 +444,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <h3>What it doesn't do</h3>
       <ul>
         <li>No background updater, no login, no account.</li>
-        <li>No analytics. Emmental never connects to the internet.</li>
+        <li>No analytics. It only goes online when you click Check for Updates.</li>
         <li>About 9 MB of memory, all in.</li>
       </ul>
       <h2 style="margin-top:26px">Why Emmental exists</h2>
@@ -482,7 +483,7 @@ input[type=range]:disabled { opacity: 0.4; }
   <div class="window" id="win-settings" role="dialog" aria-label="Emmental Settings" hidden>
     <div class="titlebar"><div class="lights"><button class="close" aria-label="Close"></button><span class="min"></span><span class="max"></span></div><div class="title">Emmental Settings</div></div>
     <div class="body">
-      <div class="settings-header"><svg><use href="#app-icon"/></svg><div><div style="font-weight:600;font-size:17px">Emmental</div><div style="font-size:12px;color:var(--text-2)">Version 0.1.0 (1)</div><div style="font-size:12px;color:var(--text-2)">Mouse tuning without the bloat.</div></div></div>
+      <div class="settings-header"><svg><use href="#app-icon"/></svg><div><div style="font-weight:600;font-size:17px">Emmental</div><div style="font-size:12px;color:var(--text-2)">Version 0.1.0</div><div style="font-size:12px;color:var(--text-2)">Mouse tuning without the bloat.</div></div></div>
       <div class="section-title">Scroll wheel</div>
       <div class="group">
         <div class="row"><span>SmartShift</span><button class="switch" id="smartshift" role="switch" aria-checked="true" aria-label="SmartShift"></button></div>
@@ -496,7 +497,10 @@ input[type=range]:disabled { opacity: 0.4; }
         <div class="hint" style="margin-top:-4px">Experimental. On macOS this may make scrolling much faster.</div>
       </div>
       <div class="section-title">General</div>
-      <div class="group"><div class="row"><span>Open at login</span><button class="switch" role="switch" aria-checked="true" aria-label="Open at login"></button></div></div>
+      <div class="group">
+        <div class="row"><span>Open at login</span><button class="switch" role="switch" aria-checked="true" aria-label="Open at login"></button></div>
+        <div class="row"><span class="hint" style="margin:0">Version 0.1.0</span><button class="small-btn" id="check-updates">Check for Updates</button></div>
+      </div>
     </div>
   </div>
 
@@ -518,7 +522,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <p>DPI, battery and SmartShift are settings on the mouse itself. Emmental talks to the mouse with Logitech's HID++ protocol, and macOS only allows that with Input Monitoring permission. Apple's prompt says the app wants to "receive keystrokes from any application", which is the standard wording for any app that reads input devices directly.</p>
       <p>Emmental only opens your Logitech mouse's settings channel, and only sends requests to read and change those settings. The Logitech features stay off until you turn them on.</p>
       <h3>Nothing leaves your Mac</h3>
-      <p>No analytics, no crash reporting, no account. Emmental makes no network connections.</p>
+      <p>No analytics, no crash reporting, no account. The only time Emmental goes online is when you click <b>Check for Updates</b> in Settings: it reads one small version file from this website, and sends nothing about you or your Mac.</p>
     </div>
   </div>
 
@@ -785,6 +789,9 @@ input[type=range]:disabled { opacity: 0.4; }
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => { toast.hidden = true; }, 2600);
   }
+  $('#check-updates').addEventListener('click', () => {
+    showToast("You're up to date. Also, this is a website.");
+  });
   $('#quit').addEventListener('click', () => {
     setMenu(false);
     showToast("Nice try. It's only 9 MB, let it stay.");
