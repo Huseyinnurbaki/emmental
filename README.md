@@ -7,7 +7,7 @@ external mouse.
 - **Pointer speed** per mouse, including speeds past the System Settings maximum
 - **Scroll speed** per mouse
 - **Sensor DPI** on Logitech mice over Bluetooth (200–8000 on the MX Master 3S)
-- **Open at login** switch in the menu
+- **Open at login** switch in the About window
 - Lives in the menu bar, no Dock icon, no background services, no updater
 - About 8 MB of memory
 - Uses public IOKit APIs only. Pointer and scroll speed need no permissions;

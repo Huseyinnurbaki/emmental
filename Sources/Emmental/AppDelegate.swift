@@ -5,7 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let speedView = SpeedMenuView()
     private let dpiView = DPIMenuView()
     private let logitechMice = LogitechMice()
-    private let loginView = SwitchMenuView(title: "Open at login")
+    private lazy var aboutWindow = AboutWindowController()
     private var watcher: DeviceWatcher?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -22,14 +22,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.logitechMice.mice.forEach { $0.setDPI(dpi) }
         }
         dpiView.onAction = { [weak self] action in self?.handle(action) }
-        loginView.onToggle = { [weak self] isOn in
-            do {
-                try LoginItem.setEnabled(isOn)
-            } catch {
-                NSSound.beep()
-                self?.loginView.isOn = LoginItem.isEnabled
-            }
-        }
 
         LoginItem.refreshIfEnabled()
         applyAll()
@@ -51,7 +43,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         speedView.update(mice: mice, values: values)
         refreshDPIView()
-        loginView.isOn = LoginItem.isEnabled
     }
 
     private func makeMenu() -> NSMenu {
@@ -66,21 +57,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         dpiItem.view = dpiView
         menu.addItem(dpiItem)
         menu.addItem(.separator())
-        let loginItem = NSMenuItem()
-        loginItem.view = loginView
-        menu.addItem(loginItem)
-        menu.addItem(.separator())
         let aboutItem = NSMenuItem(title: "About Emmental", action: #selector(showAbout), keyEquivalent: "")
         aboutItem.target = self
+        // macOS adds icons to standard items like Quit; a custom About needs its own.
+        aboutItem.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: nil)
         menu.addItem(aboutItem)
         menu.addItem(NSMenuItem(title: "Quit Emmental", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         return menu
     }
 
     @objc private func showAbout() {
-        // A menu bar app has no Dock icon, so bring it forward or the panel opens behind other windows.
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.orderFrontStandardAboutPanel(nil)
+        aboutWindow.show()
     }
 
     private func refreshDPIView() {
