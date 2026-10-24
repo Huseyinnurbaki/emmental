@@ -6,8 +6,11 @@ external mouse.
 
 - **Pointer speed** per mouse, including speeds past the System Settings maximum
 - **Scroll speed** per mouse
-- **Sensor DPI** on Logitech mice over Bluetooth (200–8000 on the MX Master 3S)
+- **Sensor DPI** on Logitech mice (200–8000 on the MX Master 3S)
 - **Battery level** next to the mouse name on Logitech mice
+- **SmartShift**: when the wheel switches to free-spin by itself, or never
+- **High-resolution scrolling** (experimental)
+- Logitech mice over **Bluetooth or a Bolt / Unifying receiver**
 - **Open at login** switch in the About window
 - Lives in the menu bar, no Dock icon, no background services, no updater
 - About 8 MB of memory
@@ -53,16 +56,35 @@ macOS resets these values when a mouse reconnects, so Emmental reapplies your
 speeds when a device appears and when the Mac wakes. A slider you haven't
 moved changes nothing.
 
-### DPI
+### Logitech features (DPI, battery, scroll wheel)
 
-DPI is a setting on the mouse itself, not in macOS. Emmental sets it with
-Logitech's HID++ 2.0 protocol (feature `0x2201`, ADJUSTABLE_DPI) over the
-mouse's vendor HID channel. macOS only lets apps open that channel with Input
-Monitoring permission, so DPI control is off until you turn it on in the menu.
-Emmental only sends HID++ requests to read and set DPI.
+These live on the mouse itself, not in macOS. Emmental talks to the mouse with
+Logitech's HID++ 2.0 protocol over its vendor HID channel:
 
-Only Bluetooth connections are supported for now. Mice on a Bolt or Unifying
-receiver use a different addressing scheme.
+| Feature | HID++ feature |
+|---|---|
+| Sensor DPI | `0x2201` ADJUSTABLE_DPI |
+| Battery | `0x1004` UNIFIED_BATTERY, or `0x1000` BATTERY_STATUS |
+| SmartShift | `0x2110` SMART_SHIFT |
+| High-resolution scrolling | `0x2121` HIRES_WHEEL |
+
+macOS only lets apps open that channel with Input Monitoring permission, so
+these are off until you turn them on in the menu. Settings you haven't changed
+are left as the mouse has them, and changed ones are reapplied when the mouse
+reconnects.
+
+Mice connect directly over Bluetooth (device index `0xFF`) or through a Bolt or
+Unifying receiver (paired devices 1–6; anything with adjustable DPI counts as a
+mouse). Receiver support is untested on real hardware so far.
+
+High-resolution scrolling makes the wheel send 15 finer steps per notch on the
+MX Master 3S. macOS may not scale those back down, so it's marked experimental.
+
+To see what Emmental reads from your mouse, without changing anything:
+
+```bash
+open -n /Applications/Emmental.app --args --diagnose ~/emmental-diagnose.txt
+```
 
 If DPI asks for permission again after a rebuild, see [Signing](#signing-recommended-if-you-use-dpi).
 

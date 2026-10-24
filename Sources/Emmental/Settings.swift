@@ -24,6 +24,24 @@ enum Settings {
         set { defaults.set(newValue, forKey: "dpi") }
     }
 
+    /// nil until the user changes it, so the mouse keeps its own setting.
+    static var smartShift: SmartShift? {
+        get {
+            guard let autoSwitch = defaults.object(forKey: "smartShiftAutoSwitch") as? Bool,
+                  let threshold = defaults.object(forKey: "smartShiftThreshold") as? Int else { return nil }
+            return SmartShift(autoSwitch: autoSwitch, threshold: threshold)
+        }
+        set {
+            defaults.set(newValue?.autoSwitch, forKey: "smartShiftAutoSwitch")
+            defaults.set(newValue?.threshold, forKey: "smartShiftThreshold")
+        }
+    }
+
+    static var highResolutionScrolling: Bool? {
+        get { defaults.object(forKey: "highResolutionScrolling") as? Bool }
+        set { defaults.set(newValue, forKey: "highResolutionScrolling") }
+    }
+
     private static func key(for control: SpeedControl) -> String {
         switch control {
         case .pointer: return "speed"

@@ -80,7 +80,7 @@ final class DPIMenuView: NSView {
             message = "Relaunch Emmental to finish turning on DPI control."
             buttonTitle = "Relaunch Emmental"
         case .noMouse:
-            message = "No Logitech mouse connected over Bluetooth."
+            message = "No Logitech mouse found."
         case let .ready(current, range):
             dpi = current
             step = range.step
