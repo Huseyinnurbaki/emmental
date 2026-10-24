@@ -8,6 +8,8 @@
 	<string>Emmental</string>
 	<key>CFBundleExecutable</key>
 	<string>Emmental</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>app.emmental.Emmental</string>
 	<key>CFBundlePackageType</key>

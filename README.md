@@ -20,6 +20,7 @@ Requires Xcode command line tools (Swift 5.6+) and macOS 12 or later.
 ```bash
 make run       # build build/Emmental.app and launch it
 make install   # copy it to /Applications
+make icon      # regenerate Resources/AppIcon.icns after changing the wedge
 ```
 
 ### Signing (recommended if you use DPI)

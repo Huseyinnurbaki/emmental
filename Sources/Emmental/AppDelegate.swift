@@ -70,8 +70,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loginItem.view = loginView
         menu.addItem(loginItem)
         menu.addItem(.separator())
+        let aboutItem = NSMenuItem(title: "About Emmental", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
         menu.addItem(NSMenuItem(title: "Quit Emmental", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         return menu
+    }
+
+    @objc private func showAbout() {
+        // A menu bar app has no Dock icon, so bring it forward or the panel opens behind other windows.
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(nil)
     }
 
     private func refreshDPIView() {

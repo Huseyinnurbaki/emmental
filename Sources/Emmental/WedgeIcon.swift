@@ -1,30 +1,38 @@
 import AppKit
 
-/// The nibbled Swiss cheese wedge, drawn as a template image so macOS tints it
-/// for light and dark menu bars. Geometry is authored on a 64×64 grid, y-down.
+/// The nibbled Swiss cheese wedge. Geometry is authored on a 64×64 grid, y-down,
+/// and shared by the menu bar template image and the app icon generator.
 enum WedgeIcon {
+    /// A template image, so macOS tints it for light and dark menu bars.
     static func image(size: CGFloat = 18) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size), flipped: true) { _ in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             ctx.scaleBy(x: size / 64, y: size / 64)
-            // The wedge points right; the path below is authored pointing left.
-            ctx.translateBy(x: 64, y: 0)
-            ctx.scaleBy(x: -1, y: 1)
-
-            ctx.setFillColor(NSColor.black.cgColor)
-            ctx.setStrokeColor(NSColor.black.cgColor)
-            ctx.setLineWidth(1.5)
-            ctx.setLineJoin(.round)
-            for face in [topFace(), frontFace()] {
-                ctx.addPath(face)
-                ctx.fillPath(using: .evenOdd)
-                ctx.addPath(face)
-                ctx.strokePath()
-            }
+            draw(in: ctx, top: NSColor.black.cgColor, front: NSColor.black.cgColor)
             return true
         }
         image.isTemplate = true
         return image
+    }
+
+    /// Draws the wedge into a y-down context already scaled to the 64-unit grid.
+    /// Holes are cut with the even-odd rule, so whatever is behind shows through.
+    static func draw(in ctx: CGContext, top: CGColor, front: CGColor) {
+        ctx.saveGState()
+        // The wedge points right; the paths below are authored pointing left.
+        ctx.translateBy(x: 64, y: 0)
+        ctx.scaleBy(x: -1, y: 1)
+        ctx.setLineWidth(1.5)
+        ctx.setLineJoin(.round)
+        for (face, color) in [(topFace(), top), (frontFace(), front)] {
+            ctx.setFillColor(color)
+            ctx.setStrokeColor(color)
+            ctx.addPath(face)
+            ctx.fillPath(using: .evenOdd)
+            ctx.addPath(face)
+            ctx.strokePath()
+        }
+        ctx.restoreGState()
     }
 
     private static func topFace() -> CGPath {
