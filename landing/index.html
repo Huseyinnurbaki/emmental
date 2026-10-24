@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Emmental · Mouse tuning for Mac, without the bloat</title>
-<meta name="description" content="Free 1.4 MB Mac menu bar app for mouse speed, acceleration and scrolling, plus DPI, SmartShift and battery on Logitech MX mice. No updater, no account.">
+<meta name="description" content="Free 1.4 MB Mac menu bar app for mouse speed, acceleration and scrolling, plus DPI, SmartShift and battery on Logitech MX mice. No background updater, no account.">
 <link rel="canonical" href="https://emmental.artichoke.monster/">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#1E2A4A">
@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="Emmental">
 <meta property="og:url" content="https://emmental.artichoke.monster/">
 <meta property="og:title" content="Emmental · Mouse tuning for Mac, without the bloat">
-<meta property="og:description" content="A free 1.4 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery. No updater, no account, no tracking.">
+<meta property="og:description" content="A free 1.4 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery. No background updater, no account, no tracking.">
 <meta property="og:image" content="https://emmental.artichoke.monster/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -49,7 +49,7 @@
     "SmartShift scroll wheel control",
     "Battery level in the menu bar",
     "Open at login, settings kept after sleep",
-    "No updater, no account, no tracking"
+    "No background updater, no account, no tracking"
   ]
 }
 </script>
@@ -403,7 +403,7 @@ input[type=range]:disabled { opacity: 0.4; }
 
   <section class="hero">
     <h1>Mouse tuning, without the bloat.</h1>
-    <p>Speed, scrolling and SmartShift for your mouse, from a 1.4 MB app in your menu bar. No updater, no account, no tracking.</p>
+    <p>Speed, scrolling and SmartShift for your mouse, from a 1.4 MB app in your menu bar. No background updater, no account, no tracking.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/Huseyinnurbaki/emmental/releases/latest/download/Emmental.zip">Download free for Mac</a>
       <button class="btn ghost" data-open="readme">What it does</button>
@@ -444,7 +444,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <h3>What it doesn't do</h3>
       <ul>
         <li>No background updater, no login, no account.</li>
-        <li>No analytics. It only goes online when you click Check for Updates.</li>
+        <li>No analytics. It only goes online when you click Check for Updates or Install Update.</li>
         <li>Under 25 MB of memory, all in.</li>
       </ul>
       <h2 style="margin-top:26px">Why Emmental exists</h2>
@@ -473,7 +473,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <h3>Why does macOS say it can't verify the developer?</h3>
       <p>Emmental isn't notarized by Apple yet. Open it once from System Settings › Privacy &amp; Security › Open Anyway, or build it from source; the Install window in the Dock has both.</p>
       <h3>Do I have to click "Open Anyway" every time?</h3>
-      <p>Once for each version you download, because Emmental isn't notarized by Apple yet. Input Monitoring, for the Logitech features, you only grant once: it carries over to new versions.</p>
+      <p>Only for the first one you download, because Emmental isn't notarized by Apple yet. After that, use Check for Updates › Install Update in Settings: updates installed from inside the app skip it. Input Monitoring, for the Logitech features, you only grant once: it carries over to new versions.</p>
       <h3>How do I uninstall it?</h3>
       <p>Turn off Open at login in Settings, choose Quit Emmental, and drag it to the Trash. Your mouse goes back to the macOS settings the next time it reconnects. Already deleted it? The README has a one-line command that removes the leftovers.</p>
       <h3>How heavy is it, really?</h3>
@@ -526,7 +526,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <p>DPI, battery and SmartShift are settings on the mouse itself. Emmental talks to the mouse with Logitech's HID++ protocol, and macOS only allows that with Input Monitoring permission. Apple's prompt says the app wants to "receive keystrokes from any application", which is the standard wording for any app that reads input devices directly.</p>
       <p>Emmental only opens your Logitech mouse's settings channel, and only sends requests to read and change those settings. The Logitech features stay off until you turn them on.</p>
       <h3>Nothing leaves your Mac</h3>
-      <p>No analytics, no crash reporting, no account. The only time Emmental goes online is when you click <b>Check for Updates</b> in Settings: it reads one small version file from this website, and sends nothing about you or your Mac.</p>
+      <p>No analytics, no crash reporting, no account. Emmental only goes online when you click <b>Check for Updates</b> in Settings, which reads one small version file from this website, or <b>Install Update</b>, which downloads the new version from GitHub and checks it's signed by the same developer before installing. It sends nothing about you or your Mac.</p>
     </div>
   </div>
 

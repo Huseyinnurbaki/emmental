@@ -41,8 +41,8 @@ What's next for Emmental, roughly in order.
       steps, so the distance per notch stays the same and it's just smoother
 - [ ] Test receiver support on real hardware
 - [x] **Check for Updates** in Settings: reads the website's `version.json` and
-      compares it with the app's version; "You're up to date" or a Download
-      button that opens the website. Manual only, no cookies, no background checks.
+      compares it with the app's version; "You're up to date" or Install Update.
+      Manual only, no cookies, no background checks.
 
 ## Website (emmental.artichoke.monster)
 
@@ -88,9 +88,12 @@ What's next for Emmental, roughly in order.
 - [x] "Move to Applications?" on first launch from anywhere else (Downloads,
       App Translocation), so open at login points at a stable path
 - [x] Uninstall steps in the README and the website's FAQ
-- [ ] Test the move prompt with a real download on another Mac
-- [ ] Optional: "Install update" in Check for Updates, downloading the zip in the
-      app so updates skip the Open Anyway step
+- [x] Move prompt tested with a real v0.2.2 download on an Apple silicon Mac
+- [x] **Install Update** in Settings: downloads the release zip, checks it's signed
+      by the same developer and is the announced version, swaps the app (old copy to
+      the Trash) and relaunches, so updates skip the Open Anyway step. Manual only.
+      Tested with genuine, impostor, wrong-version and missing downloads
+- [ ] Install Update tested end to end with a real release (first from 0.2.3 on)
 
 ## After updating Xcode
 

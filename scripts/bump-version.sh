@@ -25,7 +25,7 @@ fi
 
 # Edit just that line; PlistBuddy would also reformat the rest of the file.
 perl -0pi -e "s|(<key>CFBundleShortVersionString</key>\s*<string>)[^<]+|\${1}$NEW|" Resources/Info.plist
-perl -pi -e "s/\"version\": \"[0-9.]+\"/\"version\": \"$NEW\"/" landing/version.json
+perl -pi -e "s/\"version\": \"[0-9.]+\"/\"version\": \"$NEW\"/; s|/releases/download/v[0-9.]+/|/releases/download/v$NEW/|" landing/version.json
 # The structured data, and every "Version x.y.z" on the page, including the
 # Settings window's "Version x.y.z (n)".
 perl -pi -e "s/\"softwareVersion\": \"[0-9.]+\"/\"softwareVersion\": \"$NEW\"/; s/Version [0-9]+\.[0-9]+\.[0-9]+( \([0-9]+\))?/Version $NEW/g" landing/index.html

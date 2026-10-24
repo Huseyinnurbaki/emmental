@@ -28,8 +28,13 @@ final class SettingsWindowController: NSWindowController {
     private let loginRow = SwitchRowView(title: "Open at login")
     private let updateStatus = NSTextField(labelWithString: "")
     private let updateButton = NSButton(title: "Check for Updates", target: nil, action: nil)
-    /// Set once a newer version is found; the button then opens the website.
-    private var downloadURL: URL?
+    /// What the button does next, after a check found something.
+    private enum UpdateAction {
+        case check
+        case install(version: String, zip: URL, page: URL)
+        case openWebsite(URL)
+    }
+    private var updateAction = UpdateAction.check
     private let content = NSView()
 
     init() {
@@ -90,7 +95,7 @@ final class SettingsWindowController: NSWindowController {
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     /// "Version 0.1.0 · [Check for Updates]", becoming "Version 0.2.0 is
-    /// available · [Download]" when there's something newer.
+    /// available · [Install Update]" when there's something newer.
     private func updateRow() -> NSView {
         updateStatus.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         updateStatus.textColor = .secondaryLabelColor
@@ -102,27 +107,52 @@ final class SettingsWindowController: NSWindowController {
         return NSStackView(views: [updateStatus, NSView(), updateButton])
     }
 
+    /// Check, then Install Update when there's a newer version. If installing
+    /// fails, the button falls back to opening the website.
     @objc private func checkForUpdates() {
-        if let url = downloadURL {
-            NSWorkspace.shared.open(url)
-            return
-        }
-        updateButton.isEnabled = false
-        updateStatus.stringValue = "Checking…"
-        UpdateCheck.run { [weak self] result in
-            guard let self = self else { return }
-            self.updateButton.isEnabled = true
-            switch result {
-            case .upToDate(let version):
-                self.updateStatus.stringValue = "You're up to date (\(version))."
-            case let .available(version, download):
-                self.updateStatus.stringValue = "Version \(version) is available."
-                self.updateButton.title = "Download"
-                self.downloadURL = download
-            case .failed:
-                self.updateStatus.stringValue = "Couldn't check. Try again later."
+        switch updateAction {
+        case .check:
+            setUpdateState("Checking…", button: nil)
+            UpdateCheck.run { [weak self] result in self?.show(result) }
+        case let .install(version, zip, page):
+            setUpdateState("Downloading \(version)…", button: nil)
+            Updater.install(from: zip, version: version, replacing: Bundle.main.bundleURL) { [weak self] result in
+                switch result {
+                case .success(let app):
+                    self?.setUpdateState("Restarting…", button: nil)
+                    NSApp.relaunch(app)
+                case .failure:
+                    self?.updateAction = .openWebsite(page)
+                    self?.setUpdateState("Couldn't install it. Get it from the website.", button: "Open Website")
+                }
             }
+        case let .openWebsite(page):
+            NSWorkspace.shared.open(page)
         }
+    }
+
+    private func show(_ result: UpdateCheck.Result) {
+        switch result {
+        case .upToDate(let version):
+            setUpdateState("You're up to date (\(version)).", button: "Check for Updates")
+        case let .available(version, page, zip):
+            if let zip = zip {
+                updateAction = .install(version: version, zip: zip, page: page)
+                setUpdateState("Version \(version) is available.", button: "Install Update")
+            } else {
+                updateAction = .openWebsite(page)
+                setUpdateState("Version \(version) is available.", button: "Open Website")
+            }
+        case .failed:
+            setUpdateState("Couldn't check. Try again later.", button: "Check for Updates")
+        }
+    }
+
+    /// A nil button title means busy: the button stays disabled until done.
+    private func setUpdateState(_ status: String, button: String?) {
+        updateStatus.stringValue = status
+        updateButton.isEnabled = button != nil
+        if let title = button { updateButton.title = title }
     }
 
     func show() {

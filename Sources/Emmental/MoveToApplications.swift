@@ -38,7 +38,7 @@ enum MoveToApplications {
             failed.runModal()
             return false
         }
-        relaunch(destination)
+        NSApp.relaunch(destination)
         return true
     }
 
@@ -72,14 +72,6 @@ enum MoveToApplications {
         if original != destination {
             try? files.trashItem(at: original, resultingItemURL: nil)
         }
-    }
-
-    private static func relaunch(_ app: URL) {
-        let open = Process()
-        open.executableURL = URL(fileURLWithPath: "/bin/sh")
-        open.arguments = ["-c", "sleep 0.5; open \"$0\"", app.path]
-        try? open.run()
-        NSApp.terminate(nil)
     }
 
     /// macOS has no public API for this; Security.framework exports it.

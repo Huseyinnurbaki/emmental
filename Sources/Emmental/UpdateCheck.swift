@@ -2,12 +2,14 @@ import Foundation
 
 /// The manual "Check for Updates" in Settings. It reads the website's
 /// version.json and compares it with this build's version. It only runs when
-/// clicked: no background checks, no automatic downloads, no cookies or cache,
-/// and nothing is sent beyond the request itself.
+/// clicked: no background checks, no cookies or cache, and nothing is sent
+/// beyond the request itself. Installing is a separate click (see Updater).
 enum UpdateCheck {
     enum Result {
         case upToDate(version: String)
-        case available(version: String, download: URL)
+        /// `page` is the website; `zip` is that version's release download,
+        /// for Install Update.
+        case available(version: String, page: URL, zip: URL?)
         case failed
     }
 
@@ -21,6 +23,7 @@ enum UpdateCheck {
     private struct Feed: Decodable {
         let version: String
         let url: String?
+        let download: String?
     }
 
     static func run(_ completion: @escaping (Result) -> Void) {
@@ -30,7 +33,9 @@ enum UpdateCheck {
             if (response as? HTTPURLResponse)?.statusCode == 200,
                let data = data, let latest = try? JSONDecoder().decode(Feed.self, from: data) {
                 result = isNewer(latest.version, than: currentVersion)
-                    ? .available(version: latest.version, download: latest.url.flatMap(URL.init(string:)) ?? site)
+                    ? .available(version: latest.version,
+                                 page: latest.url.flatMap(URL.init(string:)) ?? site,
+                                 zip: latest.download.flatMap(URL.init(string:)))
                     : .upToDate(version: currentVersion)
             } else {
                 result = .failed

@@ -28,7 +28,7 @@ Masters and MX Anywhere 3 / 3S should work too. They're untested so far, so
 Also:
 
 - Logitech mice over **Bluetooth or a Bolt / Unifying receiver**
-- Lives in the menu bar, no Dock icon, no background services, no updater
+- Lives in the menu bar, no Dock icon, no background services, no background updater
 - A 1.4 MB app using under 25 MB of memory (about 9 MB on Intel, 23 MB on an M1)
 - Uses public IOKit APIs only. Acceleration and scroll speed need no
   permissions; the Logitech features are opt-in and need Input Monitoring
@@ -55,7 +55,8 @@ git tag -a v0.2.0 -m "Emmental 0.2.0" && git push origin v0.2.0
 The tag runs `.github/workflows/release.yml`, which builds the universal zip and
 attaches it to a GitHub release. The website's Download button always points at
 the latest, and **Check for Updates** in the app reads the website's
-`version.json`. The workflow stops if the tag doesn't match the app's version.
+`version.json`, whose `download` link Install Update uses. The workflow stops
+if the tag doesn't match the app's version.
 
 ```bash
 make run       # build build/Emmental.app and launch it
@@ -139,8 +140,9 @@ Download from [emmental.artichoke.monster](https://emmental.artichoke.monster/).
 Emmental isn't notarized by Apple yet, so the first launch of each downloaded
 version is blocked: open **System Settings › Privacy & Security** and click
 **Open Anyway**. It then offers to move itself into Applications, which open
-at login needs. Input Monitoring, for the Logitech features, is granted once and
-carries over to new versions.
+at login needs. After that, **Check for Updates** › **Install Update** in Settings
+installs new versions without the Open Anyway step. Input Monitoring, for the
+Logitech features, is granted once and carries over to new versions.
 
 To uninstall, turn off **Open at login** in Settings (⌘,), choose **Quit
 Emmental**, and drag the app to the Trash. If you already deleted it, this

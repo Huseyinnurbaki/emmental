@@ -41,15 +41,19 @@ so you can judge reports, and the app, against it.
   device sends, including ordinary mouse movement; Emmental only processes
   HID++ replies (report IDs `0x10` and `0x11`) and drops everything else without
   storing it. It doesn't open keyboards or any other devices.
-- **One network request, and only when you ask.** Clicking **Check for Updates**
-  in Settings fetches `https://emmental.artichoke.monster/version.json` over
-  HTTPS, with no cookies and nothing sent beyond the request itself. Otherwise
-  Emmental makes no network connections: no analytics, no crash reporting, no
-  background updater, nothing downloaded or installed on its own.
+- **Online only when you ask.** Clicking **Check for Updates** in Settings
+  fetches `https://emmental.artichoke.monster/version.json` over HTTPS, with no
+  cookies and nothing sent beyond the request itself. Clicking **Install Update**
+  downloads that version's zip from its GitHub release, and installs it only if
+  it's signed by the same developer as the copy you're running and is the version
+  the website announced; anything else is discarded and the installed app is left
+  as it was. The old copy goes to the Trash. Otherwise Emmental makes no network
+  connections: no analytics, no crash reporting, no background updater, nothing
+  downloaded or installed on its own.
 - **Open at login** writes one file, `~/Library/LaunchAgents/app.emmental.Emmental.plist`,
   and deletes it when you turn the setting off.
 - **Settings** are stored in Emmental's own preferences (`app.emmental.Emmental`).
 
 Anything that makes Emmental read input it doesn't need, touch devices other
-than the ones above, reach the network other than that one check, or run code it
-shouldn't is in scope.
+than the ones above, reach the network other than those two clicks, install an update that isn't
+signed by the same developer, or run code it shouldn't is in scope.

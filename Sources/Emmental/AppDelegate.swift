@@ -207,11 +207,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             InputMonitoring.openSettings()
         case .relaunch:
             // Input Monitoring only takes effect in a fresh process.
-            let relaunch = Process()
-            relaunch.executableURL = URL(fileURLWithPath: "/bin/sh")
-            relaunch.arguments = ["-c", "sleep 0.5; open \"$0\"", Bundle.main.bundlePath]
-            try? relaunch.run()
-            NSApp.terminate(nil)
+            NSApp.relaunch()
         }
     }
 
