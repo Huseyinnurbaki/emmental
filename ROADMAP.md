@@ -24,6 +24,8 @@ What's next for Emmental, roughly in order.
       adjustable DPI, reapply on the receiver's reconnect notification
 - [ ] Test receiver support on real hardware
 - [x] `--diagnose` mode: dumps what Emmental reads over HID++, read-only
+- [x] Slim menu (Speed, Acceleration) plus a Settings window for set-and-forget
+      options; DPI renamed Speed, pointer speed renamed Acceleration
 - [ ] **Check for updates**: a "Check for Updates" button in the About window that
       asks GitHub Releases (`/repos/Huseyinnurbaki/emmental/releases/latest`) for
       the newest tag and compares it to `CFBundleShortVersionString`. Shows

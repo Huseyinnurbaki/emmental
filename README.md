@@ -4,18 +4,28 @@ A tiny macOS menu bar app for tuning your mouse, without the weight of vendor
 software like Logi Options+. Built for the Logitech MX Master 3S; works with any
 external mouse.
 
-- **Pointer speed** per mouse, including speeds past the System Settings maximum
-- **Scroll speed** per mouse
-- **Sensor DPI** on Logitech mice (200–8000 on the MX Master 3S)
+**In the menu**, for things you change often:
+
+- **Speed**: the sensor DPI on Logitech mice (200–8000 on the MX Master 3S)
+- **Acceleration**: how much fast movements get boosted, per mouse, past the
+  System Settings maximum if you like
 - **Battery level** next to the mouse name on Logitech mice
-- **SmartShift**: when the wheel switches to free-spin by itself, or never
+
+**In Settings** (⌘, from the menu), for set-and-forget options:
+
+- **Scroll speed** per mouse
+- **SmartShift**: whether the wheel switches to free-spin by itself when you
+  flick it, and how hard a flick it takes
 - **High-resolution scrolling** (experimental)
+- **Open at login**
+
+Also:
+
 - Logitech mice over **Bluetooth or a Bolt / Unifying receiver**
-- **Open at login** switch in the About window
 - Lives in the menu bar, no Dock icon, no background services, no updater
-- About 8 MB of memory
-- Uses public IOKit APIs only. Pointer and scroll speed need no permissions;
-  DPI is opt-in and needs Input Monitoring
+- About 9 MB of memory
+- Uses public IOKit APIs only. Acceleration and scroll speed need no
+  permissions; the Logitech features are opt-in and need Input Monitoring
 
 ## Build and run
 

@@ -1,9 +1,9 @@
 import AppKit
 
-/// The DPI section of the menu. DPI lives on the mouse and is set over HID++,
-/// which needs Input Monitoring, so the section starts switched off and walks
-/// the user through granting access before showing the slider.
-final class DPIMenuView: NSView {
+/// Speed in the menu, which is the sensor DPI. DPI lives on the mouse and is
+/// set over HID++, which needs Input Monitoring, so this starts switched off
+/// and walks the user through granting access before showing the slider.
+final class DPIMenuView: NSStackView {
     enum State {
         case off, needsPermission, needsRelaunch, noMouse
         /// `dpi` is nil while the current value is still being read from the mouse.
@@ -14,50 +14,36 @@ final class DPIMenuView: NSView {
 
     var onChange: ((Int) -> Void)?
     var onAction: ((Action) -> Void)?
+    /// Called when the view's height changes, so its menu item can resize.
+    var onResize: (() -> Void)?
 
-    private let valueLabel = NSTextField(labelWithString: "")
-    private let messageLabel = NSTextField(wrappingLabelWithString: "")
+    private let slider: LabeledSliderView
+    private let title = NSTextField(labelWithString: "Speed")
+    private let message = NSTextField(wrappingLabelWithString: "")
     private let button = NSButton(title: "", target: nil, action: nil)
-    private let slider = NSSlider(value: 1000, minValue: 200, maxValue: 8000, target: nil, action: nil)
     private var state = State.off
-    private var step = DPIRange.fallback.step
 
     init() {
+        let fallback = DPIRange.fallback
+        slider = LabeledSliderView(title: "Speed", range: Double(fallback.min)...Double(fallback.max),
+                                   step: Double(fallback.step), format: { "\(Int($0)) DPI" })
         super.init(frame: .zero)
 
-        valueLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        valueLabel.textColor = .secondaryLabelColor
-        valueLabel.alignment = .right
-        messageLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        messageLabel.textColor = .secondaryLabelColor
-        messageLabel.preferredMaxLayoutWidth = 224
+        message.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        message.textColor = .secondaryLabelColor
+        message.preferredMaxLayoutWidth = MenuItemContainer.width - 36
         button.bezelStyle = .rounded
         button.controlSize = .small
         button.target = self
         button.action = #selector(buttonClicked)
-        slider.isContinuous = true
-        slider.target = self
-        slider.action = #selector(sliderChanged)
+        slider.onChange = { [weak self] value in self?.onChange?(Int(value)) }
 
-        let header = NSStackView(views: [NSTextField(labelWithString: "Sensor DPI"), valueLabel])
-        let stack = NSStackView(views: [header, slider, messageLabel, button])
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 6
-        stack.edgeInsets = NSEdgeInsets(top: 6, left: 20, bottom: 6, right: 16)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
-            stack.topAnchor.constraint(equalTo: topAnchor),
-            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
-            widthAnchor.constraint(equalToConstant: 260),
-            header.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -36),
-            slider.widthAnchor.constraint(equalTo: header.widthAnchor),
-            messageLabel.widthAnchor.constraint(equalTo: header.widthAnchor),
-        ])
+        orientation = .vertical
+        alignment = .leading
+        spacing = 6
+        [title, slider, message, button].forEach(addArrangedSubview)
+        slider.widthAnchor.constraint(equalTo: widthAnchor).isActive = true
+        message.widthAnchor.constraint(equalTo: widthAnchor).isActive = true
         show(.off)
     }
 
@@ -65,47 +51,41 @@ final class DPIMenuView: NSView {
 
     func show(_ state: State) {
         self.state = state
-        var message = ""
+        var text = ""
         var buttonTitle: String?
-        var dpi: Int?
 
         switch state {
         case .off:
-            message = "Change your Logitech mouse's sensor speed and see its battery. Needs Input Monitoring permission."
-            buttonTitle = "Turn on DPI control"
+            text = "Set your Logitech mouse's speed, see its battery, and tune its scroll wheel. Needs Input Monitoring permission."
+            buttonTitle = "Turn on"
         case .needsPermission:
-            message = "Allow Emmental in Privacy & Security › Input Monitoring."
+            text = "Allow Emmental in Privacy & Security › Input Monitoring."
             buttonTitle = "Open Input Monitoring"
         case .needsRelaunch:
-            message = "Relaunch Emmental to finish turning on DPI control."
+            text = "Relaunch Emmental to finish turning this on."
             buttonTitle = "Relaunch Emmental"
         case .noMouse:
-            message = "No Logitech mouse found."
-        case let .ready(current, range):
-            dpi = current
-            step = range.step
-            slider.minValue = Double(range.min)
-            slider.maxValue = Double(range.max)
-            if let current = current { slider.doubleValue = Double(current) }
+            text = "No Logitech mouse found."
+        case let .ready(dpi, range):
+            slider.setRange(Double(range.min)...Double(range.max), step: Double(range.step))
+            if let dpi = dpi {
+                slider.value = Double(dpi)
+            } else {
+                slider.showPlaceholder("…")
+            }
+            slider.isEnabled = dpi != nil
         }
 
         let isReady: Bool
         if case .ready = state { isReady = true } else { isReady = false }
+        // The slider carries its own "Speed" title; other states need the bare one.
+        title.isHidden = isReady
         slider.isHidden = !isReady
-        slider.isEnabled = dpi != nil
-        valueLabel.stringValue = isReady ? (dpi.map(String.init) ?? "…") : ""
-        messageLabel.stringValue = message
-        messageLabel.isHidden = message.isEmpty
+        message.stringValue = text
+        message.isHidden = text.isEmpty
         button.title = buttonTitle ?? ""
         button.isHidden = buttonTitle == nil
-        setFrameSize(fittingSize)
-    }
-
-    @objc private func sliderChanged() {
-        let dpi = Int((slider.doubleValue / Double(step)).rounded()) * step
-        slider.doubleValue = Double(dpi)
-        valueLabel.stringValue = String(dpi)
-        onChange?(dpi)
+        onResize?()
     }
 
     @objc private func buttonClicked() {

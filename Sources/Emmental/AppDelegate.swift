@@ -1,23 +1,27 @@
 import AppKit
 
+/// The menu holds what you change often (speed and acceleration) and the
+/// Settings window holds the set-and-forget options.
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-    private let speedView = SpeedMenuView()
+    private let headerView = MenuHeaderView()
     private let dpiView = DPIMenuView()
-    private let wheelView = WheelMenuView()
-    private let wheelItem = NSMenuItem()
+    private let accelerationView = AccelerationMenuView()
     private let logitechMice = LogitechMice()
-    private lazy var aboutWindow = AboutWindowController()
+    private var settingsWindow: SettingsWindowController?
     private var watcher: DeviceWatcher?
     private var isMenuOpen = false
+    /// The latest SmartShift state, from the user or the mouse, so the switch
+    /// and the threshold in Settings can each change their half of it.
+    private var smartShift: SmartShift?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem.button?.image = WedgeIcon.image()
         statusItem.button?.toolTip = "Emmental"
         statusItem.menu = makeMenu()
 
-        speedView.onChange = { [weak self] control, value in
-            Settings.setValue(value, for: control)
+        accelerationView.onChange = { [weak self] value in
+            Settings.setValue(value, for: .pointer)
             self?.applySpeeds()
         }
         dpiView.onChange = { [weak self] dpi in
@@ -25,20 +29,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.logitechMice.mice.forEach { $0.setDPI(dpi) }
         }
         dpiView.onAction = { [weak self] action in self?.handle(action) }
-        wheelView.onSmartShiftChange = { [weak self] smartShift in
-            Settings.smartShift = smartShift
-            self?.logitechMice.mice.forEach { $0.setSmartShift(smartShift) }
-        }
-        wheelView.onHighResolutionChange = { [weak self] enabled in
-            Settings.highResolutionScrolling = enabled
-            self?.logitechMice.mice.forEach { $0.setHighResolutionScrolling(enabled) }
-        }
         // Mice behind a receiver show up asynchronously, and wake up without the
         // device watcher noticing; both arrive here.
         logitechMice.onMouseAvailable = { [weak self] mouse in
             guard let self = self else { return }
             self.apply(to: mouse)
-            if self.isMenuOpen { self.refreshLogitechViews() }
+            if self.isMenuOpen { self.refreshLogitech() }
         }
 
         LoginItem.refreshIfEnabled()
@@ -56,12 +52,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         isMenuOpen = true
         let mice = MouseSpeed.connectedMice()
-        var values: [SpeedControl: Double] = [:]
-        for control in SpeedControl.allCases {
-            values[control] = Settings.value(for: control) ?? mice.first.flatMap { MouseSpeed.value(of: control, on: $0) }
-        }
-        speedView.update(mice: mice, values: values)
-        refreshLogitechViews()
+        headerView.update(mice: mice)
+        let acceleration = Settings.value(for: .pointer)
+            ?? mice.first.flatMap { MouseSpeed.value(of: .pointer, on: $0) } ?? 1
+        accelerationView.update(value: acceleration, enabled: !mice.isEmpty)
+        refreshLogitech()
     }
 
     func menuDidClose(_ menu: NSMenu) {
@@ -72,54 +67,102 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu()
         menu.delegate = self
 
-        let speedItem = NSMenuItem()
-        speedItem.view = speedView
-        menu.addItem(speedItem)
+        func addView(_ view: NSView, top: CGFloat = 6, bottom: CGFloat = 6) -> NSMenuItem {
+            let item = NSMenuItem()
+            item.view = MenuItemContainer(view, top: top, bottom: bottom)
+            menu.addItem(item)
+            return item
+        }
+
+        _ = addView(headerView, top: 6, bottom: 4)
+        let dpiItem = addView(dpiView)
+        dpiView.onResize = { (dpiItem.view as? MenuItemContainer)?.fitToContent() }
+        _ = addView(accelerationView)
+
         menu.addItem(.separator())
-        let dpiItem = NSMenuItem()
-        dpiItem.view = dpiView
-        menu.addItem(dpiItem)
-        wheelItem.view = wheelView
-        wheelItem.isHidden = true
-        menu.addItem(wheelItem)
-        menu.addItem(.separator())
-        let aboutItem = NSMenuItem(title: "About Emmental", action: #selector(showAbout), keyEquivalent: "")
-        aboutItem.target = self
-        // macOS adds icons to standard items like Quit; a custom About needs its own.
-        aboutItem.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: nil)
-        menu.addItem(aboutItem)
+        let settingsItem = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        settingsItem.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
+        menu.addItem(settingsItem)
         menu.addItem(NSMenuItem(title: "Quit Emmental", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         return menu
     }
 
-    @objc private func showAbout() {
-        aboutWindow.show()
+    // MARK: Settings window
+
+    @objc private func showSettings() {
+        let window = settingsWindow ?? makeSettingsWindow()
+        settingsWindow = window
+        let scroll = Settings.value(for: .scroll)
+            ?? MouseSpeed.connectedMice().first.flatMap { MouseSpeed.value(of: .scroll, on: $0) } ?? 1
+        window.setScrollSpeed(scroll)
+        window.setSmartShift(nil)
+        window.setHighResolution(nil)
+        window.show()
+
+        guard let mouse = readyLogitechMouse() else { return }
+        mouse.readSmartShift { [weak self] current in
+            guard let self = self else { return }
+            self.smartShift = Settings.smartShift ?? current
+            self.settingsWindow?.setSmartShift(self.smartShift)
+        }
+        mouse.readHighResolutionScrolling { [weak self] current in
+            self?.settingsWindow?.setHighResolution(current.map { Settings.highResolutionScrolling ?? $0 })
+        }
     }
 
-    /// The DPI, battery and wheel controls all go through HID++, so they share
-    /// one opt-in and one permission check.
-    private func refreshLogitechViews() {
-        wheelItem.isHidden = true
+    private func makeSettingsWindow() -> SettingsWindowController {
+        let window = SettingsWindowController()
+        window.onScrollSpeedChange = { [weak self] value in
+            Settings.setValue(value, for: .scroll)
+            self?.applySpeeds()
+        }
+        window.onSmartShiftToggle = { [weak self] isOn in
+            guard let self = self, let current = self.smartShift else { return }
+            self.changeSmartShift(SmartShift(autoSwitch: isOn, threshold: current.threshold))
+        }
+        window.onThresholdChange = { [weak self] threshold in
+            guard let self = self, let current = self.smartShift else { return }
+            self.changeSmartShift(SmartShift(autoSwitch: current.autoSwitch, threshold: threshold))
+        }
+        window.onHighResolutionChange = { [weak self] enabled in
+            Settings.highResolutionScrolling = enabled
+            self?.logitechMice.mice.forEach { $0.setHighResolutionScrolling(enabled) }
+        }
+        return window
+    }
+
+    // MARK: Logitech features
+
+    /// The first Logitech mouse, if HID++ is turned on, permitted and connected.
+    private func readyLogitechMouse() -> LogitechMouse? {
+        guard Settings.dpiEnabled, InputMonitoring.isGranted else { return nil }
+        return logitechMice.refresh().mice.first
+    }
+
+    /// Speed and battery go through HID++, so they share one opt-in and one
+    /// permission check (with SmartShift and high-res scrolling in Settings).
+    private func refreshLogitech() {
         guard Settings.dpiEnabled else { return dpiView.show(.off) }
         guard InputMonitoring.isGranted else { return dpiView.show(.needsPermission) }
         let (mice, blocked) = logitechMice.refresh()
         guard let mouse = mice.first else { return dpiView.show(blocked ? .needsRelaunch : .noMouse) }
 
-        mouse.readBattery { [weak self] battery in self?.speedView.setBattery(battery) }
+        mouse.readBattery { [weak self] battery in self?.headerView.setBattery(battery) }
 
-        // Saved values win over what's read, in case a slider moved meanwhile.
+        // Saved values win over what's read, in case a control moved meanwhile.
         dpiView.show(.ready(dpi: Settings.dpi, range: .fallback))
         mouse.readDPI { [weak self] current, range in
             self?.dpiView.show(.ready(dpi: Settings.dpi ?? current, range: range))
         }
-        mouse.readSmartShift { [weak self] current in
-            guard let self = self else { return }
-            self.wheelView.showSmartShift(Settings.smartShift ?? current)
-            self.wheelItem.isHidden = false
-        }
-        mouse.readHighResolutionScrolling { [weak self] current in
-            self?.wheelView.showHighResolution(current.map { Settings.highResolutionScrolling ?? $0 })
-        }
+    }
+
+    /// Saves and applies a SmartShift change from Settings.
+    private func changeSmartShift(_ smartShift: SmartShift) {
+        self.smartShift = smartShift
+        Settings.smartShift = smartShift
+        logitechMice.mice.forEach { $0.setSmartShift(smartShift) }
+        settingsWindow?.setSmartShift(smartShift)
     }
 
     private func handle(_ action: DPIMenuView.Action) {
@@ -141,6 +184,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             NSApp.terminate(nil)
         }
     }
+
+    // MARK: Applying settings
 
     private func applyAll() {
         applySpeeds()
