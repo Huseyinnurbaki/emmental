@@ -132,6 +132,26 @@ Emmental rewrites the file on each launch, so it always points at the copy
 you're running. Install to `/Applications` first (`make install`) so it
 doesn't point into `build/`.
 
+## Install and uninstall
+
+Download from [emmental.artichoke.monster](https://emmental.artichoke.monster/).
+Emmental isn't notarized by Apple yet, so the first launch of each downloaded
+version is blocked: open **System Settings › Privacy & Security** and click
+**Open Anyway**. It then offers to move itself into Applications, which open
+at login needs. Input Monitoring, for the Logitech features, is granted once and
+carries over to new versions.
+
+To uninstall, turn off **Open at login** in Settings (⌘,), choose **Quit
+Emmental**, and drag the app to the Trash. If you already deleted it, this
+removes what's left (the login item, preferences, and the Input Monitoring entry):
+
+```bash
+rm -f ~/Library/LaunchAgents/app.emmental.Emmental.plist; defaults delete app.emmental.Emmental; tccutil reset ListenEvent app.emmental.Emmental
+```
+
+Mouse settings go back to the macOS defaults the next time the mouse reconnects
+or the Mac restarts.
+
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md).

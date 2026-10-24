@@ -82,6 +82,16 @@ What's next for Emmental, roughly in order.
 - [ ] Optional: Apple Developer ID and notarization, so downloads open without
       the "Open Anyway" step
 
+## Installing
+
+- [x] Only one copy runs: a starting copy quits any other
+- [x] "Move to Applications?" on first launch from anywhere else (Downloads,
+      App Translocation), so open at login points at a stable path
+- [x] Uninstall steps in the README and the website's FAQ
+- [ ] Test the move prompt with a real download on another Mac
+- [ ] Optional: "Install update" in Check for Updates, downloading the zip in the
+      app so updates skip the Open Anyway step
+
 ## After updating Xcode
 
 - [ ] Switch open at login to `SMAppService` (macOS 13 SDK) instead of writing a

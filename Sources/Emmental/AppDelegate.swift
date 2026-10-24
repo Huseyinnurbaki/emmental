@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var smartShift: SmartShift?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if MoveToApplications.offerIfNeeded() { return } // relaunching from /Applications
         replaceOtherCopies()
         statusItem.button?.image = WedgeIcon.image()
         statusItem.button?.toolTip = "Emmental"
