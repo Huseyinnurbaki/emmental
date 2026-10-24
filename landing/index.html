@@ -462,7 +462,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <h3>Why can it go past 3.0 when System Settings can't?</h3>
       <p>macOS stores acceleration on each mouse and accepts higher values; the System Settings slider just stops at 3.0. Emmental sets the same value, per mouse, up to 8.0.</p>
       <h3>Does it work with my mouse?</h3>
-      <p>Acceleration and scroll speed work with any external mouse. Speed (DPI), battery and SmartShift need a Logitech mouse that speaks HID++, like the MX Master series. It's built and tested on an MX Master 3S over Bluetooth.</p>
+      <p>Acceleration and scroll speed work with any external mouse. Speed (DPI), battery and SmartShift need a Logitech mouse that speaks HID++, like the MX Master and MX Anywhere series. Emmental asks the mouse what it supports instead of checking the model, so newer MX mice should work too. It's built and tested on an MX Master 3S over Bluetooth; other models are untested so far.</p>
       <h3>Why does it want Input Monitoring?</h3>
       <p>Only for the Logitech features, and only if you turn them on. Changing DPI means talking to the mouse directly, and macOS puts that behind Input Monitoring. The Privacy window in the Dock has the details.</p>
       <h3>Will my settings survive a restart or sleep?</h3>

@@ -1,8 +1,14 @@
-# Emmental
+# 🧀 Emmental
 
 A tiny macOS menu bar app for tuning your mouse, without the weight of vendor
-software like Logi Options+. Built for the Logitech MX Master 3S; works with any
-external mouse.
+software like Logi Options+. Acceleration and scroll speed work with any
+external mouse; the Logitech extras work with Logitech mice that speak HID++.
+
+Built and tested on an MX Master 3S. Emmental doesn't check the model: it asks
+the mouse which HID++ features it has (DPI, SmartShift, battery) and shows the
+ones it finds, so other recent Logitech mice like the MX Master 3, newer MX
+Masters and MX Anywhere 3 / 3S should work too. They're untested so far, so
+[reports are welcome](https://github.com/Huseyinnurbaki/emmental/issues).
 
 **In the menu**, for things you change often:
 
