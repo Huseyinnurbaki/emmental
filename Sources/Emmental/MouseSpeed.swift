@@ -8,14 +8,40 @@ struct Mouse {
     let name: String
 }
 
-/// Reads and writes pointer speed on individual mice through the public
+/// A speed macOS keeps on each mouse's HID service.
+enum SpeedControl: CaseIterable {
+    case pointer, scroll
+
+    var title: String {
+        switch self {
+        case .pointer: return "Pointer speed"
+        case .scroll: return "Scroll speed"
+        }
+    }
+
+    /// The pointer range reaches past the System Settings cap; the HID event
+    /// system accepts the higher values.
+    var range: ClosedRange<Double> {
+        switch self {
+        case .pointer: return 0...8
+        case .scroll: return 0...5
+        }
+    }
+
+    fileprivate var hidKey: String {
+        switch self {
+        case .pointer: return kIOHIDMouseAccelerationType
+        case .scroll: return kIOHIDMouseScrollAccelerationKey
+        }
+    }
+}
+
+/// Reads and writes speeds on individual mice through the public
 /// IOHIDEventSystemClient API. Changes apply to that device only and need no
 /// special permissions; macOS resets them when the device reconnects.
 enum MouseSpeed {
-    /// System Settings › Mouse › Tracking speed stops at 3.0, but the HID event
-    /// system accepts higher values, which is where the extra speed comes from.
-    static let systemMaximum = 3.0
-    static let range = 0.0...8.0
+    /// Where System Settings › Mouse › Tracking speed tops out.
+    static let systemPointerMaximum = 3.0
 
     private static let client = IOHIDEventSystemClientCreateSimpleClient(kCFAllocatorDefault)
 
@@ -31,13 +57,12 @@ enum MouseSpeed {
     }
 
     // HID numeric properties are 16.16 fixed point.
-    static func speed(of mouse: Mouse) -> Double? {
-        intProperty(mouse.service, kIOHIDMouseAccelerationType).map { Double($0) / 65536 }
+    static func value(of control: SpeedControl, on mouse: Mouse) -> Double? {
+        intProperty(mouse.service, control.hidKey).map { Double($0) / 65536 }
     }
 
-    static func setSpeed(_ speed: Double, on mouse: Mouse) {
-        IOHIDServiceClientSetProperty(mouse.service, kIOHIDMouseAccelerationType as CFString,
-                                      Int(speed * 65536) as CFNumber)
+    static func set(_ value: Double, for control: SpeedControl, on mouse: Mouse) {
+        IOHIDServiceClientSetProperty(mouse.service, control.hidKey as CFString, Int(value * 65536) as CFNumber)
     }
 
     private static func intProperty(_ service: IOHIDServiceClient, _ key: String) -> Int? {

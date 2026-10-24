@@ -10,8 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.toolTip = "Emmental"
         statusItem.menu = makeMenu()
 
-        speedView.onChange = { speed in
-            Settings.speed = speed
+        speedView.onChange = { control, value in
+            Settings.setValue(value, for: control)
             Self.applySettings()
         }
 
@@ -28,8 +28,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         let mice = MouseSpeed.connectedMice()
-        let speed = Settings.speed ?? mice.first.flatMap(MouseSpeed.speed(of:)) ?? 1
-        speedView.update(mice: mice, speed: speed)
+        var values: [SpeedControl: Double] = [:]
+        for control in SpeedControl.allCases {
+            values[control] = Settings.value(for: control) ?? mice.first.flatMap { MouseSpeed.value(of: control, on: $0) }
+        }
+        speedView.update(mice: mice, values: values)
     }
 
     private func makeMenu() -> NSMenu {
@@ -44,12 +47,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return menu
     }
 
-    /// Pushes the saved speed to every connected mouse. Does nothing until the
-    /// user has picked a speed, so first launch leaves the system untouched.
+    /// Pushes the saved speeds to every connected mouse. A speed the user hasn't
+    /// picked yet is left alone, so first launch leaves the system untouched.
     private static func applySettings() {
-        guard let speed = Settings.speed else { return }
-        for mouse in MouseSpeed.connectedMice() {
-            MouseSpeed.setSpeed(speed, on: mouse)
+        let mice = MouseSpeed.connectedMice()
+        for control in SpeedControl.allCases {
+            guard let value = Settings.value(for: control) else { continue }
+            for mouse in mice {
+                MouseSpeed.set(value, for: control, on: mouse)
+            }
         }
     }
 }
