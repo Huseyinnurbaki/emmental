@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var smartShift: SmartShift?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        replaceOtherCopies()
         statusItem.button?.image = WedgeIcon.image()
         statusItem.button?.toolTip = "Emmental"
         statusItem.menu = makeMenu()
@@ -65,6 +66,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }
         startDriftCheck()
+    }
+
+    /// Only one Emmental should run, or the menu bar shows two wedges that
+    /// fight over the same mouse. The copy starting now wins, so opening a
+    /// newer version replaces the older one. (`--diagnose` exits before this.)
+    private func replaceOtherCopies() {
+        let me = NSRunningApplication.current
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+            .filter { $0.processIdentifier != me.processIdentifier }
+        for other in others {
+            log.notice("Quitting another running copy: \(other.bundleURL?.path ?? "?", privacy: .public)")
+            other.terminate()
+        }
     }
 
     func menuWillOpen(_ menu: NSMenu) {
