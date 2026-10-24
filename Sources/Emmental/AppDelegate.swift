@@ -76,6 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let (mice, blocked) = logitechMice.refresh()
         guard let mouse = mice.first else { return dpiView.show(blocked ? .needsRelaunch : .noMouse) }
 
+        mouse.readBattery { [weak self] battery in self?.speedView.setBattery(battery) }
         dpiView.show(.ready(dpi: Settings.dpi, range: .fallback))
         mouse.readDPI { [weak self] current, range in
             // If the slider moved while we were reading, keep the user's value.

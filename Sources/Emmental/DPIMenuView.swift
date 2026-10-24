@@ -71,7 +71,7 @@ final class DPIMenuView: NSView {
 
         switch state {
         case .off:
-            message = "Change your Logitech mouse's sensor speed. Needs Input Monitoring permission."
+            message = "Change your Logitech mouse's sensor speed and see its battery. Needs Input Monitoring permission."
             buttonTitle = "Turn on DPI control"
         case .needsPermission:
             message = "Allow Emmental in Privacy & Security › Input Monitoring."

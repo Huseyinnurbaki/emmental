@@ -7,6 +7,7 @@ external mouse.
 - **Pointer speed** per mouse, including speeds past the System Settings maximum
 - **Scroll speed** per mouse
 - **Sensor DPI** on Logitech mice over Bluetooth (200–8000 on the MX Master 3S)
+- **Battery level** next to the mouse name on Logitech mice
 - **Open at login** switch in the About window
 - Lives in the menu bar, no Dock icon, no background services, no updater
 - About 8 MB of memory
@@ -75,5 +76,4 @@ doesn't point into `build/`.
 
 ## Roadmap
 
-- SmartShift and high-resolution scrolling on Logitech mice via HID++
-- Bolt receiver support
+See [ROADMAP.md](ROADMAP.md).

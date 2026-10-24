@@ -32,10 +32,19 @@ struct DPIRange {
     }
 }
 
-/// A Logitech mouse whose sensor DPI can be read and set over HID++
-/// (feature 0x2201, ADJUSTABLE_DPI, sensor 0).
+/// A battery reading from the mouse. macOS doesn't expose Logitech batteries,
+/// so this only comes over HID++.
+struct Battery {
+    let percent: Int
+    let isCharging: Bool
+}
+
+/// A Logitech mouse reached over HID++: sensor DPI (feature 0x2201,
+/// ADJUSTABLE_DPI, sensor 0) and battery level.
 final class LogitechMouse {
     private static let adjustableDPI: UInt16 = 0x2201
+    private static let unifiedBattery: UInt16 = 0x1004
+    private static let batteryStatus: UInt16 = 0x1000
 
     let registryID: UInt64
     private let hidpp: HIDPPDevice
@@ -58,6 +67,41 @@ final class LogitechMouse {
                 }
             }
         }
+    }
+
+    /// Reads the charge via UNIFIED_BATTERY (0x1004), which newer mice like the
+    /// MX Master 3S use, falling back to the older BATTERY_STATUS (0x1000).
+    /// Calls back only if the mouse answers.
+    func readBattery(_ completion: @escaping (Battery) -> Void) {
+        hidpp.featureIndex(of: Self.unifiedBattery) { [weak self] index in
+            guard let self = self else { return }
+            guard let index = index else { return self.readLegacyBattery(completion) }
+            // get_status: state of charge %, level flags, charging status, external power.
+            self.hidpp.send(feature: index, function: 1) { reply in
+                guard let reply = reply else { return }
+                let percent = reply[0] != 0 ? Int(reply[0]) : Self.percent(fromLevel: reply[1])
+                completion(Battery(percent: percent, isCharging: reply[2] == 1 || reply[2] == 2))
+            }
+        }
+    }
+
+    private func readLegacyBattery(_ completion: @escaping (Battery) -> Void) {
+        hidpp.featureIndex(of: Self.batteryStatus) { [weak self] index in
+            guard let self = self, let index = index else { return }
+            // GetBatteryLevelStatus: level %, next level %, status.
+            self.hidpp.send(feature: index, function: 0) { reply in
+                guard let reply = reply else { return }
+                completion(Battery(percent: Int(reply[0]), isCharging: [1, 2, 4].contains(reply[2])))
+            }
+        }
+    }
+
+    /// Some mice report only a coarse level: 8 full, 4 good, 2 low, 1 critical.
+    private static func percent(fromLevel flags: UInt8) -> Int {
+        if flags & 8 != 0 { return 100 }
+        if flags & 4 != 0 { return 60 }
+        if flags & 2 != 0 { return 20 }
+        return 5
     }
 
     /// Slider drags produce many values; only one write is in flight at a time

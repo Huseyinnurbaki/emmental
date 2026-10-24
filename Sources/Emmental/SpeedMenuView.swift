@@ -8,6 +8,8 @@ final class SpeedMenuView: NSView {
     private let deviceLabel = NSTextField(labelWithString: "")
     private let hintLabel = NSTextField(labelWithString: "")
     private var rows: [SpeedControl: SliderRow] = [:]
+    private var deviceNames = ""
+    private var battery: Battery?
 
     init() {
         super.init(frame: .zero)
@@ -53,12 +55,43 @@ final class SpeedMenuView: NSView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// Clears the battery; it arrives separately (and only over HID++) via `setBattery`.
     func update(mice: [Mouse], values: [SpeedControl: Double]) {
-        deviceLabel.stringValue = mice.isEmpty ? "No mouse connected" : mice.map(\.name).joined(separator: ", ")
+        deviceNames = mice.isEmpty ? "No mouse connected" : mice.map(\.name).joined(separator: ", ")
+        battery = nil
+        refreshDeviceLabel()
         for (control, row) in rows {
             row.update(value: values[control] ?? 1, enabled: !mice.isEmpty)
         }
         refreshHint()
+    }
+
+    func setBattery(_ battery: Battery) {
+        self.battery = battery
+        refreshDeviceLabel()
+    }
+
+    /// "MX Master 3S M   [battery] 85%", with the symbol tinted like the text.
+    private func refreshDeviceLabel() {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        let text = NSMutableAttributedString(string: deviceNames, attributes: attributes)
+        if let battery = battery {
+            text.append(NSAttributedString(string: "   ", attributes: attributes))
+            let config = NSImage.SymbolConfiguration(pointSize: NSFont.smallSystemFontSize, weight: .regular)
+                .applying(.init(paletteColors: [.secondaryLabelColor]))
+            if let symbol = NSImage(systemSymbolName: battery.symbolName, accessibilityDescription: nil)?
+                .withSymbolConfiguration(config) {
+                let attachment = NSTextAttachment()
+                attachment.image = symbol
+                attachment.bounds = CGRect(x: 0, y: -2, width: symbol.size.width, height: symbol.size.height)
+                text.append(NSAttributedString(attachment: attachment))
+            }
+            text.append(NSAttributedString(string: " \(battery.percent)%", attributes: attributes))
+        }
+        deviceLabel.attributedStringValue = text
     }
 
     private func refreshHint() {
@@ -66,6 +99,19 @@ final class SpeedMenuView: NSView {
         hintLabel.stringValue = pointer > MouseSpeed.systemPointerMaximum
             ? "Faster than System Settings allows"
             : "System Settings tops out at 3.0"
+    }
+}
+
+private extension Battery {
+    var symbolName: String {
+        if isCharging { return "battery.100.bolt" }
+        switch percent {
+        case 88...: return "battery.100"
+        case 63...: return "battery.75"
+        case 38...: return "battery.50"
+        case 13...: return "battery.25"
+        default: return "battery.0"
+        }
     }
 }
 
