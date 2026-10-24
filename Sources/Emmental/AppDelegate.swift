@@ -1,4 +1,7 @@
 import AppKit
+import os
+
+private let log = Logger(subsystem: "app.emmental.Emmental", category: "App")
 
 /// The menu holds what you change often (speed, acceleration, scroll speed)
 /// and the Settings window holds the set-and-forget options.
@@ -13,6 +16,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let logitechMice = LogitechMice()
     private var settingsWindow: SettingsWindowController?
     private var watcher: DeviceWatcher?
+    private var driftTimer: Timer?
+    /// Bumped by each reapply request, so overlapping wake and connect events
+    /// collapse into the latest schedule instead of stacking up.
+    private var reapplyGeneration = 0
     private var isMenuOpen = false
     /// The latest SmartShift state, from the user or the mouse, so the switch
     /// and the threshold in Settings can each change their half of it.
@@ -45,15 +52,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         LoginItem.refreshIfEnabled()
-        applyAll()
-        // A reconnecting mouse comes back with defaults; give its HID service a
-        // moment to register before reapplying.
-        watcher = DeviceWatcher { [weak self] in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { self?.applyAll() }
+        applyAll(reason: "launch")
+        // A reconnecting mouse comes back with defaults. After waking, macOS
+        // also pushes its own mouse settings, and Bluetooth mice reconnect a
+        // few seconds later, so reapply in stages to land after both.
+        watcher = DeviceWatcher { [weak self] in self?.reapplySoon(reason: "device connected") }
+        let center = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotification,
+                     NSWorkspace.sessionDidBecomeActiveNotification] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                self?.reapplySoon(reason: note.name.rawValue)
+            }
         }
-        NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.applyAll() }
+        startDriftCheck()
     }
 
     func menuWillOpen(_ menu: NSMenu) {
@@ -191,9 +202,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Applying settings
 
-    private func applyAll() {
+    private func applyAll(reason: String) {
+        log.notice("Applying settings (\(reason, privacy: .public))")
         applySpeeds()
         applyLogitech()
+    }
+
+    /// Reapplies at 1, 3 and 8 seconds. A newer request replaces an older one's
+    /// remaining passes, so a burst of events still means three passes.
+    private func reapplySoon(reason: String) {
+        reapplyGeneration += 1
+        let generation = reapplyGeneration
+        log.notice("Reapply requested: \(reason, privacy: .public)")
+        for delay in [1.0, 3.0, 8.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self = self, self.reapplyGeneration == generation else { return }
+                self.applyAll(reason: "\(reason) +\(Int(delay))s")
+            }
+        }
+    }
+
+    /// macOS can quietly put its own values back, after waking or when System
+    /// Settings changes. Checking is a few property reads, so look every 15
+    /// seconds and reapply only if something drifted. DPI lives on the mouse
+    /// and reading it costs Bluetooth traffic, so it isn't polled.
+    private func startDriftCheck() {
+        let timer = Timer(timeInterval: 15, repeats: true) { [weak self] _ in self?.checkDrift() }
+        timer.tolerance = 5
+        RunLoop.main.add(timer, forMode: .common)
+        driftTimer = timer
+    }
+
+    private func checkDrift() {
+        for mouse in MouseSpeed.connectedMice() {
+            for control in SpeedControl.allCases {
+                guard let wanted = Settings.value(for: control),
+                      let actual = MouseSpeed.value(of: control, on: mouse),
+                      abs(wanted - actual) > 0.01 else { continue }
+                log.notice("\(control.title, privacy: .public) drifted on \(mouse.name, privacy: .public): \(actual) instead of \(wanted)")
+                applySpeeds()
+                return
+            }
+        }
     }
 
     /// Pushes the saved speeds to every connected mouse. A speed the user hasn't
@@ -210,12 +260,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func applyLogitech() {
         guard Settings.dpiEnabled, InputMonitoring.isGranted else { return }
-        logitechMice.refresh().mice.forEach(apply(to:))
+        let (mice, blocked) = logitechMice.refresh()
+        if blocked { log.error("A Logitech device couldn't be opened") }
+        mice.forEach(apply(to:))
     }
 
     /// Sends every saved HID++ setting to one mouse; unset ones are left alone.
     private func apply(to mouse: LogitechMouse) {
         guard Settings.dpiEnabled, InputMonitoring.isGranted else { return }
+        log.notice("Sending saved HID++ settings to device \(mouse.deviceIndex)")
         if let dpi = Settings.dpi { mouse.setDPI(dpi) }
         if let smartShift = Settings.smartShift { mouse.setSmartShift(smartShift) }
         if let highResolution = Settings.highResolutionScrolling { mouse.setHighResolutionScrolling(highResolution) }

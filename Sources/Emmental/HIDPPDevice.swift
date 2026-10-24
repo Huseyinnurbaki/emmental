@@ -1,5 +1,8 @@
 import Foundation
 import IOKit.hid
+import os
+
+private let log = Logger(subsystem: "app.emmental.Emmental", category: "HID++")
 
 /// A HID++ 2.0 connection over a Logitech vendor channel: either a mouse
 /// connected directly over Bluetooth (usage page 0xFF43), or a Bolt / Unifying
@@ -8,7 +11,10 @@ import IOKit.hid
 /// Requests are 20-byte long reports: report ID, device index, feature index,
 /// function and software ID packed into one byte, then 16 parameter bytes.
 /// Responses arrive asynchronously on the main run loop and are matched back to
-/// requests by device index, feature and function.
+/// requests by device index, feature, function and software ID. The software
+/// ID rotates per request, so a dropped reply can't shift later replies onto
+/// the wrong requests. Mice do drop replies, especially right after waking, so
+/// requests that time out are retried.
 final class HIDPPDevice {
     typealias Response = [UInt8]
 
@@ -19,7 +25,7 @@ final class HIDPPDevice {
     private static let longReportID: UInt8 = 0x11
     private static let shortReportLength = 7
     private static let longReportLength = 20
-    private static let softwareID: UInt8 = 0x0A
+    private static let timeout: TimeInterval = 1.5
     private static let errorFeature: UInt8 = 0xFF      // HID++ 2.0 error reply
     private static let legacyError: UInt8 = 0x8F       // HID++ 1.0 error, e.g. device offline
     private static let connectionNotice: UInt8 = 0x41  // receiver: a paired device (dis)connected
@@ -32,6 +38,8 @@ final class HIDPPDevice {
     private let inputBuffer: UnsafeMutablePointer<UInt8>
     private var pending: [UInt32: [Request]] = [:]
     private var featureIndexes: [UInt32: UInt8] = [:]
+    /// 1–15; 0 is reserved for notifications the device sends on its own.
+    private var lastSoftwareID: UInt8 = 0
 
     private final class Request {
         let completion: (Response?) -> Void
@@ -84,14 +92,16 @@ final class HIDPPDevice {
     }
 
     /// Sends a request; `completion` gets the 16 parameter bytes of the reply, or
-    /// nil on a HID++ error or after a 2 second timeout.
+    /// nil on a HID++ error. A request that gets no reply is sent again up to
+    /// `retries` times before completing with nil.
     func send(to deviceIndex: UInt8, feature: UInt8, function: UInt8, params: [UInt8] = [],
-              completion: ((Response?) -> Void)? = nil) {
+              retries: Int = 2, completion: ((Response?) -> Void)? = nil) {
+        lastSoftwareID = lastSoftwareID % 15 + 1
         var report = [UInt8](repeating: 0, count: Self.longReportLength)
         report[0] = Self.longReportID
         report[1] = deviceIndex
         report[2] = feature
-        report[3] = function << 4 | Self.softwareID
+        report[3] = function << 4 | lastSoftwareID
         report.replaceSubrange(4..<(4 + params.count), with: params)
 
         let key = Self.key(deviceIndex, feature, report[3])
@@ -99,9 +109,17 @@ final class HIDPPDevice {
         pending[key, default: []].append(request)
 
         let result = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, CFIndex(Self.longReportID), report, report.count)
-        guard result == kIOReturnSuccess else { return complete(key, nil, matching: request) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.complete(key, nil, matching: request)
+        let wait = result == kIOReturnSuccess ? Self.timeout : 0.5
+        DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in
+            // Still pending means no reply came (or the write itself failed).
+            guard let self = self, self.remove(request, for: key) else { return }
+            if retries > 0 {
+                self.send(to: deviceIndex, feature: feature, function: function, params: params,
+                          retries: retries - 1, completion: request.completion)
+            } else {
+                log.error("No reply from device \(deviceIndex) to feature \(feature) function \(function)")
+                request.completion(nil)
+            }
         }
     }
 
@@ -131,19 +149,20 @@ final class HIDPPDevice {
         }
     }
 
-    /// Resolves the oldest request for `key`, or exactly `request` if given and
-    /// still pending. Unsolicited reports (notifications) match nothing.
-    private func complete(_ key: UInt32, _ response: Response?, matching request: Request? = nil) {
+    /// Resolves the oldest request for `key` with a reply (or nil for a HID++
+    /// error). Unsolicited reports (notifications) match nothing.
+    private func complete(_ key: UInt32, _ response: Response?) {
         guard var queue = pending[key], !queue.isEmpty else { return }
-        let index: Int
-        if let request = request {
-            guard let match = queue.firstIndex(where: { $0 === request }) else { return }
-            index = match
-        } else {
-            index = 0
-        }
-        let done = queue.remove(at: index)
+        let done = queue.removeFirst()
         pending[key] = queue.isEmpty ? nil : queue
         done.completion(response)
+    }
+
+    /// Removes `request` if it's still waiting; false if it was already answered.
+    private func remove(_ request: Request, for key: UInt32) -> Bool {
+        guard var queue = pending[key], let index = queue.firstIndex(where: { $0 === request }) else { return false }
+        queue.remove(at: index)
+        pending[key] = queue.isEmpty ? nil : queue
+        return true
     }
 }

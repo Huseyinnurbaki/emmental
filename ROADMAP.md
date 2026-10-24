@@ -7,6 +7,11 @@ What's next for Emmental, roughly in order.
 - [x] Create a signing identity (`scripts/create-signing-cert.sh`), `make install`,
       and grant Input Monitoring one last time, so DPI and battery survive rebuilds
 - [ ] Restart and confirm Emmental opens at login with saved settings applied
+- [x] Survive sleep: staged reapply (1/3/8 s) after wake, unlock and reconnect;
+      15-second drift check for acceleration and scroll speed; HID++ requests
+      get unique IDs and are retried; key events are logged
+- [ ] Verify with a real sleep (5–10 min) that DPI and SmartShift come back, then
+      read `/usr/bin/log show --last 30m --predicate 'subsystem == "app.emmental.Emmental"'`
 - [ ] Live with it for a few days; with DPI around 1900, try pointer speed 2–3
 
 ## Features
