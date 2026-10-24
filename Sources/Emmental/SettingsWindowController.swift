@@ -3,7 +3,6 @@ import AppKit
 /// Emmental's Settings window: the set-and-forget options that don't need to
 /// be one click away in the menu, plus the app's icon and version.
 final class SettingsWindowController: NSWindowController {
-    var onScrollSpeedChange: ((Double) -> Void)?
     var onSmartShiftToggle: ((Bool) -> Void)?
     var onThresholdChange: ((Int) -> Void)?
     var onHighResolutionChange: ((Bool) -> Void)?
@@ -11,7 +10,13 @@ final class SettingsWindowController: NSWindowController {
     private static let width: CGFloat = 360
     private static let groupPadding: CGFloat = 14
 
-    private let scrollSpeed: LabeledSliderView
+    /// The Scroll wheel section only has Logitech controls, so it hides
+    /// entirely until the mouse reports at least one of them.
+    private let wheelTitle = SettingsWindowController.sectionTitle("Scroll wheel")
+    private var wheelGroup: NSView!
+    private var showsSmartShift = false
+    private var showsHighResolution = false
+
     private let smartShiftRow = SwitchRowView(title: "SmartShift")
     private let smartShiftHint = SettingsWindowController.hintLabel(
         "Switches the wheel to free-spin when you flick it. The button under the wheel still switches by hand.")
@@ -24,10 +29,6 @@ final class SettingsWindowController: NSWindowController {
     private let content = NSView()
 
     init() {
-        let scrollRange = SpeedControl.scroll.range
-        scrollSpeed = LabeledSliderView(title: "Scroll speed", range: scrollRange,
-                                        tickMarks: Int(scrollRange.upperBound) + 1,
-                                        format: { String(format: "%.1f", $0) })
         let thresholds = SmartShift.thresholdRange
         threshold = LabeledSliderView(title: "Free-spin threshold",
                                       range: Double(thresholds.lowerBound)...Double(thresholds.upperBound),
@@ -38,7 +39,6 @@ final class SettingsWindowController: NSWindowController {
         window.isReleasedWhenClosed = false
         super.init(window: window)
 
-        scrollSpeed.onChange = { [weak self] in self?.onScrollSpeedChange?($0) }
         smartShiftRow.onToggle = { [weak self] in self?.onSmartShiftToggle?($0) }
         threshold.onChange = { [weak self] in self?.onThresholdChange?(Int($0)) }
         highResolution.onToggle = { [weak self] in self?.onHighResolutionChange?($0) }
@@ -51,11 +51,12 @@ final class SettingsWindowController: NSWindowController {
             }
         }
 
+        wheelGroup = Self.group([smartShiftRow, smartShiftHint, threshold, thresholdHint,
+                                 highResolution, highResolutionHint])
         let stack = NSStackView(views: [
             Self.header(),
-            Self.sectionTitle("Scrolling"),
-            Self.group([scrollSpeed, smartShiftRow, smartShiftHint, threshold, thresholdHint,
-                        highResolution, highResolutionHint]),
+            wheelTitle,
+            wheelGroup,
             Self.sectionTitle("General"),
             Self.group([loginRow]),
         ])
@@ -78,7 +79,6 @@ final class SettingsWindowController: NSWindowController {
             view.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
         window.contentView = content
-        setScrollSpeed(1)
         setSmartShift(nil)
         setHighResolution(nil)
     }
@@ -93,29 +93,34 @@ final class SettingsWindowController: NSWindowController {
         window?.makeKeyAndOrderFront(nil)
     }
 
-    func setScrollSpeed(_ value: Double) {
-        scrollSpeed.value = value
-    }
-
     /// nil hides SmartShift, e.g. before Logitech features are turned on. The
     /// threshold is only adjustable while SmartShift is on.
     func setSmartShift(_ smartShift: SmartShift?) {
+        showsSmartShift = smartShift != nil
         for view in [smartShiftRow, smartShiftHint, threshold, thresholdHint] as [NSView] {
-            view.isHidden = smartShift == nil
+            view.isHidden = !showsSmartShift
         }
         if let smartShift = smartShift {
             smartShiftRow.isOn = smartShift.autoSwitch
             threshold.value = Double(smartShift.threshold)
             threshold.isEnabled = smartShift.autoSwitch
         }
-        resizeToFit()
+        refreshWheelSection()
     }
 
     /// nil hides the row, for mice without a high-resolution wheel.
     func setHighResolution(_ enabled: Bool?) {
-        highResolution.isHidden = enabled == nil
-        highResolutionHint.isHidden = enabled == nil
+        showsHighResolution = enabled != nil
+        highResolution.isHidden = !showsHighResolution
+        highResolutionHint.isHidden = !showsHighResolution
         highResolution.isOn = enabled ?? false
+        refreshWheelSection()
+    }
+
+    private func refreshWheelSection() {
+        let isEmpty = !showsSmartShift && !showsHighResolution
+        wheelTitle.isHidden = isEmpty
+        wheelGroup.isHidden = isEmpty
         resizeToFit()
     }
 

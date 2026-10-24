@@ -1,12 +1,15 @@
 import AppKit
 
-/// The menu holds what you change often (speed and acceleration) and the
-/// Settings window holds the set-and-forget options.
+/// The menu holds what you change often (speed, acceleration, scroll speed)
+/// and the Settings window holds the set-and-forget options.
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let headerView = MenuHeaderView()
     private let dpiView = DPIMenuView()
     private let accelerationView = AccelerationMenuView()
+    private let scrollView = LabeledSliderView(title: "Scroll speed", range: SpeedControl.scroll.range,
+                                               tickMarks: Int(SpeedControl.scroll.range.upperBound) + 1,
+                                               format: { String(format: "%.1f", $0) })
     private let logitechMice = LogitechMice()
     private var settingsWindow: SettingsWindowController?
     private var watcher: DeviceWatcher?
@@ -22,6 +25,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         accelerationView.onChange = { [weak self] value in
             Settings.setValue(value, for: .pointer)
+            self?.applySpeeds()
+        }
+        scrollView.onChange = { [weak self] value in
+            Settings.setValue(value, for: .scroll)
             self?.applySpeeds()
         }
         dpiView.onChange = { [weak self] dpi in
@@ -53,9 +60,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         isMenuOpen = true
         let mice = MouseSpeed.connectedMice()
         headerView.update(mice: mice)
-        let acceleration = Settings.value(for: .pointer)
-            ?? mice.first.flatMap { MouseSpeed.value(of: .pointer, on: $0) } ?? 1
-        accelerationView.update(value: acceleration, enabled: !mice.isEmpty)
+        func saved(_ control: SpeedControl) -> Double {
+            Settings.value(for: control) ?? mice.first.flatMap { MouseSpeed.value(of: control, on: $0) } ?? 1
+        }
+        accelerationView.update(value: saved(.pointer), enabled: !mice.isEmpty)
+        scrollView.value = saved(.scroll)
+        scrollView.isEnabled = !mice.isEmpty
         refreshLogitech()
     }
 
@@ -78,6 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let dpiItem = addView(dpiView)
         dpiView.onResize = { (dpiItem.view as? MenuItemContainer)?.fitToContent() }
         _ = addView(accelerationView)
+        _ = addView(scrollView)
 
         menu.addItem(.separator())
         let settingsItem = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
@@ -93,9 +104,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func showSettings() {
         let window = settingsWindow ?? makeSettingsWindow()
         settingsWindow = window
-        let scroll = Settings.value(for: .scroll)
-            ?? MouseSpeed.connectedMice().first.flatMap { MouseSpeed.value(of: .scroll, on: $0) } ?? 1
-        window.setScrollSpeed(scroll)
         window.setSmartShift(nil)
         window.setHighResolution(nil)
         window.show()
@@ -113,10 +121,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func makeSettingsWindow() -> SettingsWindowController {
         let window = SettingsWindowController()
-        window.onScrollSpeedChange = { [weak self] value in
-            Settings.setValue(value, for: .scroll)
-            self?.applySpeeds()
-        }
         window.onSmartShiftToggle = { [weak self] isOn in
             guard let self = self, let current = self.smartShift else { return }
             self.changeSmartShift(SmartShift(autoSwitch: isOn, threshold: current.threshold))

@@ -9,11 +9,11 @@ external mouse.
 - **Speed**: the sensor DPI on Logitech mice (200–8000 on the MX Master 3S)
 - **Acceleration**: how much fast movements get boosted, per mouse, past the
   System Settings maximum if you like
+- **Scroll speed** per mouse
 - **Battery level** next to the mouse name on Logitech mice
 
 **In Settings** (⌘, from the menu), for set-and-forget options:
 
-- **Scroll speed** per mouse
 - **SmartShift**: whether the wheel switches to free-spin by itself when you
   flick it, and how hard a flick it takes
 - **High-resolution scrolling** (experimental)
