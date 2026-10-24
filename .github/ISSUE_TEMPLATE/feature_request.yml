@@ -1,0 +1,30 @@
+name: Feature request
+description: A setting or behavior you'd like Emmental to have.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Emmental stays small on purpose: a few settings people actually use, and
+        nothing running in the background. Requests that fit that are the most
+        likely to happen.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why? What do you use it for?
+    validations:
+      required: true
+
+  - type: input
+    id: mouse
+    attributes:
+      label: Mouse
+      placeholder: MX Master 3S

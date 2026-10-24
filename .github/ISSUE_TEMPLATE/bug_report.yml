@@ -1,0 +1,71 @@
+name: Bug report
+description: Something doesn't work the way it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      placeholder: After waking the Mac, the mouse was slow again until I restarted Emmental.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Set Speed to 1900 DPI
+        2. Put the Mac to sleep for 10 minutes
+        3. Wake it and move the mouse
+
+  - type: input
+    id: mouse
+    attributes:
+      label: Mouse and connection
+      placeholder: MX Master 3S over Bluetooth
+    validations:
+      required: true
+
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version
+      placeholder: MacBook Pro 2019 (Intel), macOS 26.3
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Emmental version
+      description: Shown in Settings (⌘, from the menu).
+      placeholder: 0.1.0
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Emmental logs waking, reconnecting and anything that failed. Paste the
+        output of this command, run soon after the problem:
+
+            /usr/bin/log show --last 30m --predicate 'subsystem == "app.emmental.Emmental"' --style compact
+      render: text
+
+  - type: textarea
+    id: diagnose
+    attributes:
+      label: Diagnostics (Logitech mice)
+      description: |
+        Optional. Reads your mouse's current settings without changing anything:
+
+            open -n /Applications/Emmental.app --args --diagnose ~/emmental-diagnose.txt; cat ~/emmental-diagnose.txt
+      render: text

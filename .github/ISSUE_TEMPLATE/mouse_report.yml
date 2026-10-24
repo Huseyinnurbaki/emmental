@@ -1,0 +1,75 @@
+name: Mouse report
+description: Tell us how Emmental works with your mouse, good or bad.
+title: "Mouse report: "
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Emmental is tested on an MX Master 3S. Reports from other mice tell everyone
+        what works. Successes are just as useful as problems.
+
+  - type: input
+    id: mouse
+    attributes:
+      label: Mouse model
+      placeholder: MX Master 3, MX Anywhere 3S, …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: How is it connected?
+      options:
+        - Bluetooth
+        - Bolt receiver
+        - Unifying receiver
+        - USB cable
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: works
+    attributes:
+      label: What works?
+      description: Tick everything that works as expected.
+      options:
+        - label: Acceleration
+        - label: Scroll speed
+        - label: Speed (DPI)
+        - label: Battery level
+        - label: SmartShift
+        - label: Settings come back after sleep or reconnecting
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: What didn't work, or anything odd?
+      placeholder: For example, "DPI slider shows but doesn't change anything."
+
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version
+      placeholder: MacBook Pro 2019 (Intel), macOS 26.3
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Emmental version
+      description: Shown in Settings (⌘, from the menu).
+      placeholder: 0.1.0
+
+  - type: textarea
+    id: diagnose
+    attributes:
+      label: Diagnostics
+      description: |
+        Paste the output of this command. It only reads from the mouse and
+        changes nothing. It needs Logitech features turned on in Emmental.
+
+            open -n /Applications/Emmental.app --args --diagnose ~/emmental-diagnose.txt; cat ~/emmental-diagnose.txt
+      render: text

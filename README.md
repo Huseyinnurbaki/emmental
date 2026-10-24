@@ -122,6 +122,12 @@ doesn't point into `build/`.
 
 See [ROADMAP.md](ROADMAP.md).
 
+## Contributing
+
+Mouse reports, bug reports and pull requests are welcome; see
+[CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately, as
+described in [SECURITY.md](SECURITY.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
