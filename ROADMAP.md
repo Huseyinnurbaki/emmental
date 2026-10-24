@@ -14,6 +14,15 @@ What's next for Emmental, roughly in order.
       read `/usr/bin/log show --last 30m --predicate 'subsystem == "app.emmental.Emmental"'`
 - [ ] Live with it for a few days; with DPI around 1900, try pointer speed 2–3
 
+## Apple silicon
+
+- [ ] Universal release build (`swift build --arch arm64 --arch x86_64`) so one
+      download runs natively on Intel and Apple silicon. Until then, an Intel
+      build runs on Apple silicon through Rosetta, which macOS offers to install
+      on first launch.
+- [ ] Test on an Apple silicon Mac: acceleration and scroll speed, HID++ (DPI,
+      battery, SmartShift), Input Monitoring, open at login and sleep
+
 ## Features
 
 - [x] Pointer speed past the System Settings maximum

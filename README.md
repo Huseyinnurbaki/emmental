@@ -31,6 +31,12 @@ Also:
 
 Requires Xcode command line tools (Swift 5.6+) and macOS 12 or later.
 
+`make` builds for the Mac you're on. Emmental is developed and tested on an
+Intel Mac, so far. A build made on Intel runs on Apple silicon through Rosetta;
+building on an Apple silicon Mac gives a native build. Universal release builds
+(both architectures in one app) and testing on Apple silicon are on the
+[roadmap](ROADMAP.md).
+
 ```bash
 make run       # build build/Emmental.app and launch it
 make install   # copy it to /Applications
