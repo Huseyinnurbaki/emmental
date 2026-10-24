@@ -29,7 +29,7 @@ Also:
 
 - Logitech mice over **Bluetooth or a Bolt / Unifying receiver**
 - Lives in the menu bar, no Dock icon, no background services, no updater
-- About 9 MB of memory
+- A 1.4 MB app using under 25 MB of memory (about 9 MB on Intel, 23 MB on an M1)
 - Uses public IOKit APIs only. Acceleration and scroll speed need no
   permissions; the Logitech features are opt-in and need Input Monitoring
 

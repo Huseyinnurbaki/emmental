@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Emmental · Mouse tuning for Mac, without the bloat</title>
-<meta name="description" content="Free 9 MB Mac menu bar app for mouse speed, acceleration and scrolling, plus DPI, SmartShift and battery on Logitech MX mice. No updater, no account.">
+<meta name="description" content="Free 1.4 MB Mac menu bar app for mouse speed, acceleration and scrolling, plus DPI, SmartShift and battery on Logitech MX mice. No updater, no account.">
 <link rel="canonical" href="https://emmental.artichoke.monster/">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#1E2A4A">
@@ -16,14 +16,14 @@
 <meta property="og:site_name" content="Emmental">
 <meta property="og:url" content="https://emmental.artichoke.monster/">
 <meta property="og:title" content="Emmental · Mouse tuning for Mac, without the bloat">
-<meta property="og:description" content="A free 9 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery. No updater, no account, no tracking.">
+<meta property="og:description" content="A free 1.4 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery. No updater, no account, no tracking.">
 <meta property="og:image" content="https://emmental.artichoke.monster/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="The Emmental app icon, the headline “Mouse tuning, without the bloat.”, and its menu with Speed, Acceleration and Scroll speed sliders.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Emmental · Mouse tuning for Mac, without the bloat">
-<meta name="twitter:description" content="A free 9 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery.">
+<meta name="twitter:description" content="A free 1.4 MB menu bar app for mouse speed, scrolling, and Logitech DPI, SmartShift and battery.">
 <meta name="twitter:image" content="https://emmental.artichoke.monster/og.png">
 <meta name="twitter:image:alt" content="The Emmental app icon, the headline “Mouse tuning, without the bloat.”, and its menu with Speed, Acceleration and Scroll speed sliders.">
 
@@ -403,7 +403,7 @@ input[type=range]:disabled { opacity: 0.4; }
 
   <section class="hero">
     <h1>Mouse tuning, without the bloat.</h1>
-    <p>Speed, scrolling and SmartShift for your mouse, from a 9 MB app in your menu bar. No updater, no account, no tracking.</p>
+    <p>Speed, scrolling and SmartShift for your mouse, from a 1.4 MB app in your menu bar. No updater, no account, no tracking.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/Huseyinnurbaki/emmental/releases/latest/download/Emmental.zip">Download free for Mac</a>
       <button class="btn ghost" data-open="readme">What it does</button>
@@ -445,12 +445,12 @@ input[type=range]:disabled { opacity: 0.4; }
       <ul>
         <li>No background updater, no login, no account.</li>
         <li>No analytics. It only goes online when you click Check for Updates.</li>
-        <li>About 9 MB of memory, all in.</li>
+        <li>Under 25 MB of memory, all in.</li>
       </ul>
       <h2 style="margin-top:26px">Why Emmental exists</h2>
       <p>Logitech's MX mice are great mice. The software around them can feel like a lot: Logi Options+ is a big app for a handful of settings, keeps helpers running in the background, and asks for updates more often than a mouse seems to need.</p>
       <p>Over the years it adds up. The Mac this started on had collected more than 2 GB of Logitech software: Options+, the older Logitech Options, and G HUB, each with its own helpers, updaters and drivers. All for one mouse.</p>
-      <p>Yet the thing most people want is simply a faster pointer. Emmental does that, plus the few extras worth keeping: DPI, SmartShift and battery. It sits in the menu bar, uses about 9 MB, and asks for nothing.</p>
+      <p>Yet the thing most people want is simply a faster pointer. Emmental does that, plus the few extras worth keeping: DPI, SmartShift and battery. It sits in the menu bar, uses under 25 MB of memory, and asks for nothing.</p>
       <h3>You can build one too</h3>
       <p>Emmental was built in a couple of days with AI. It worked out Logitech's HID++ protocol by asking the mouse questions one careful, read-only step at a time, before changing anything.</p>
       <p>If a gadget you own comes with an app you don't love, you probably don't need the whole suite. Describe the one thing you want, and build that. The source is on GitHub if you want a starting point.</p>
@@ -473,7 +473,7 @@ input[type=range]:disabled { opacity: 0.4; }
       <h3>Why does macOS say it can't verify the developer?</h3>
       <p>Emmental isn't notarized by Apple yet. Open it once from System Settings › Privacy &amp; Security › Open Anyway, or build it from source; the Install window in the Dock has both.</p>
       <h3>How heavy is it, really?</h3>
-      <p>About 9 MB of memory with the menu open or closed, no helper processes, and the download is about a megabyte.</p>
+      <p>About 9 MB of memory on an Intel Mac and about 23 MB on Apple silicon, measured on an M1 (its larger memory pages make every app look bigger there), no helper processes, and close to zero CPU. The app itself is 1.4 MB with both versions inside.</p>
       <h3>Why is it called Emmental?</h3>
       <p>The answer is hidden somewhere on this page. Hint: look closely at the cheesiest thing on the desktop.</p>
       <p style="margin-top:22px;color:var(--text-3)">You reached the bottom. Your scroll wheel works.</p>
@@ -794,7 +794,7 @@ input[type=range]:disabled { opacity: 0.4; }
   });
   $('#quit').addEventListener('click', () => {
     setMenu(false);
-    showToast("Nice try. It's only 9 MB, let it stay.");
+    showToast("Nice try. It's only 1.4 MB, let it stay.");
   });
 
   // Copy buttons in the Install window.
