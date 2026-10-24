@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let speedView = SpeedMenuView()
     private let dpiView = DPIMenuView()
     private let logitechMice = LogitechMice()
+    private let loginView = SwitchMenuView(title: "Open at login")
     private var watcher: DeviceWatcher?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -21,7 +22,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.logitechMice.mice.forEach { $0.setDPI(dpi) }
         }
         dpiView.onAction = { [weak self] action in self?.handle(action) }
+        loginView.onToggle = { [weak self] isOn in
+            do {
+                try LoginItem.setEnabled(isOn)
+            } catch {
+                NSSound.beep()
+                self?.loginView.isOn = LoginItem.isEnabled
+            }
+        }
 
+        LoginItem.refreshIfEnabled()
         applyAll()
         // A reconnecting mouse comes back with defaults; give its HID service a
         // moment to register before reapplying.
@@ -41,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         speedView.update(mice: mice, values: values)
         refreshDPIView()
+        loginView.isOn = LoginItem.isEnabled
     }
 
     private func makeMenu() -> NSMenu {
@@ -54,6 +65,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let dpiItem = NSMenuItem()
         dpiItem.view = dpiView
         menu.addItem(dpiItem)
+        menu.addItem(.separator())
+        let loginItem = NSMenuItem()
+        loginItem.view = loginView
+        menu.addItem(loginItem)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit Emmental", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         return menu
@@ -78,6 +93,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             Settings.dpiEnabled = true
             if InputMonitoring.isGranted { applyDPI() } else { InputMonitoring.request() }
         case .openSettings:
+            // Requesting again lists this exact build in Settings. An ad-hoc
+            // signed rebuild doesn't match the entry an older build left there.
+            InputMonitoring.request()
             InputMonitoring.openSettings()
         case .relaunch:
             // Input Monitoring only takes effect in a fresh process.

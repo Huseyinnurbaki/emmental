@@ -7,6 +7,7 @@ external mouse.
 - **Pointer speed** per mouse, including speeds past the System Settings maximum
 - **Scroll speed** per mouse
 - **Sensor DPI** on Logitech mice over Bluetooth (200–8000 on the MX Master 3S)
+- **Open at login** switch in the menu
 - Lives in the menu bar, no Dock icon, no background services, no updater
 - About 8 MB of memory
 - Uses public IOKit APIs only. Pointer and scroll speed need no permissions;
@@ -20,6 +21,23 @@ Requires Xcode command line tools (Swift 5.6+) and macOS 12 or later.
 make run       # build build/Emmental.app and launch it
 make install   # copy it to /Applications
 ```
+
+### Signing (recommended if you use DPI)
+
+Without a certificate, builds are signed ad hoc, and macOS treats every rebuild
+as a new app: DPI's Input Monitoring permission stops working and you have to
+remove and re-add Emmental in System Settings. Create a free self-signed
+identity once and the permission sticks:
+
+```bash
+scripts/create-signing-cert.sh
+```
+
+It adds an "Emmental Dev" code signing certificate to your login keychain and
+asks for your password to trust it. After that, `make` signs with it
+automatically (or pass `SIGN_IDENTITY="Your Cert"`). Grant Input Monitoring
+once more after the first signed build. Pointer and scroll speed work either
+way.
 
 ## How it works
 
@@ -44,12 +62,17 @@ Emmental only sends HID++ requests to read and set DPI.
 Only Bluetooth connections are supported for now. Mice on a Bolt or Unifying
 receiver use a different addressing scheme.
 
-While developing: the app is ad-hoc signed, so macOS may treat each rebuild as
-a new app and drop its Input Monitoring permission. Toggle it off and on in
-System Settings after rebuilding.
+If DPI asks for permission again after a rebuild, see [Signing](#signing-recommended-if-you-use-dpi).
+
+### Open at login
+
+Turning it on writes `~/Library/LaunchAgents/app.emmental.Emmental.plist`,
+which starts Emmental when you log in; turning it off deletes the file.
+Emmental rewrites the file on each launch, so it always points at the copy
+you're running. Install to `/Applications` first (`make install`) so it
+doesn't point into `build/`.
 
 ## Roadmap
 
 - SmartShift and high-resolution scrolling on Logitech mice via HID++
 - Bolt receiver support
-- Launch at login
