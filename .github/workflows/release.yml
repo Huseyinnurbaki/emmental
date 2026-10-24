@@ -1,0 +1,66 @@
+# Builds a universal, signed Emmental.zip for each version tag and attaches it
+# to a GitHub release. The website's Download button points at the latest one.
+#
+# Release:  git tag v0.1.0 && git push origin v0.1.0
+#
+# Needs two repository secrets, the "Emmental Dev" identity exported from
+# Keychain Access: SIGNING_P12 (the .p12, base64) and SIGNING_P12_PASSWORD.
+# Signing with the same identity every time keeps the app's identity stable,
+# so people don't have to grant Input Monitoring again after updating.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    env:
+      KEYCHAIN: ${{ runner.temp }}/signing.keychain-db
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import signing identity
+        env:
+          SIGNING_P12: ${{ secrets.SIGNING_P12 }}
+          SIGNING_P12_PASSWORD: ${{ secrets.SIGNING_P12_PASSWORD }}
+        run: |
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$SIGNING_P12" | base64 --decode > "$RUNNER_TEMP/identity.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/identity.p12" -k "$KEYCHAIN" -P "$SIGNING_P12_PASSWORD" -T /usr/bin/codesign
+          # Let codesign use the key without a prompt nobody can answer on CI.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/identity.p12"
+          # The certificate is self-signed and not trusted on this machine, so sign
+          # by its hash instead of relying on a trusted-identity lookup by name.
+          HASH=$(security find-identity -p codesigning "$KEYCHAIN" | awk '/"Emmental Dev"/ { print $2; exit }')
+          test -n "$HASH" || { echo "Emmental Dev identity not found in SIGNING_P12"; exit 1; }
+          echo "SIGN_HASH=$HASH" >> "$GITHUB_ENV"
+
+      - name: Build universal app
+        run: make release SIGN="$SIGN_HASH" VERSION="${GITHUB_REF_NAME#v}" BUILD_NUMBER="${{ github.run_number }}"
+
+      - name: Check the build
+        run: |
+          codesign --verify --strict build/release/Emmental.app
+          codesign -dvv build/release/Emmental.app 2>&1 | grep -E "Identifier=|Authority="
+          lipo -archs build/release/Emmental.app/Contents/MacOS/Emmental | grep -q "x86_64 arm64"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" build/release/Emmental.zip \
+            --title "Emmental $GITHUB_REF_NAME" --generate-notes
+
+      - name: Remove signing keychain
+        if: always()
+        run: security delete-keychain "$KEYCHAIN" || true

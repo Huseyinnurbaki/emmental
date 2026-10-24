@@ -18,10 +18,9 @@ What's next for Emmental, roughly in order.
 
 ## Apple silicon
 
-- [ ] Universal release build (`swift build --arch arm64 --arch x86_64`) so one
-      download runs natively on Intel and Apple silicon. Until then, an Intel
-      build runs on Apple silicon through Rosetta, which macOS offers to install
-      on first launch.
+- [x] Universal release build (`make release`): one download runs natively on
+      Intel and Apple silicon. Local `make` builds are still for the Mac they're
+      built on.
 - [ ] Test on an Apple silicon Mac: acceleration and scroll speed, HID++ (DPI,
       battery, SmartShift), Input Monitoring, open at login and sleep
 
@@ -54,10 +53,10 @@ What's next for Emmental, roughly in order.
 - [x] SEO and link previews: meta and Open Graph tags, JSON-LD, robots.txt,
       sitemap.xml, llms.txt, `og.png` (`make og`)
 - [x] Cloudflare deploy from the repo (`wrangler.jsonc`); pushes to `main` redeploy
-- [ ] Add the custom domain `emmental.artichoke.monster` in Cloudflare and check
-      the link preview card
-- [ ] Make the Download button work: point it at the latest GitHub release's
-      `Emmental.zip` (`/releases/latest/download/Emmental.zip`)
+- [x] Custom domain `emmental.artichoke.monster` live on Cloudflare; every file
+      and the link preview tags checked
+- [x] Download button points at the latest GitHub release's `Emmental.zip`
+      (works once the repo is public and the first release exists)
 - [ ] Pick the wallpaper (cheese moon today, glass waves suggested). If the moon
       goes, move the easter egg.
 
@@ -69,8 +68,10 @@ What's next for Emmental, roughly in order.
       Install window
 - [ ] Make the repo public, then enable **Private vulnerability reporting**
       (Settings › Code security) so SECURITY.md's link works
-- [ ] Release workflow: GitHub Actions builds a universal, zipped `.app` for each
-      version tag and attaches it to the release
+- [x] Release workflow (`.github/workflows/release.yml`): on each `v*` tag, builds
+      a universal app signed with the Emmental Dev identity (from the
+      `SIGNING_P12` secrets) and attaches `Emmental.zip` to a GitHub release
+- [ ] First release: add the two secrets, then `git tag v0.1.0 && git push origin v0.1.0`
 - [ ] CHANGELOG.md, starting with the first release
 - [ ] README: screenshots of the menu and the Settings window, plus the "Open
       Anyway" steps

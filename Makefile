@@ -6,7 +6,7 @@ APP := build/Emmental.app
 SIGN_IDENTITY ?= Emmental Dev
 SIGN := $(shell security find-identity -v -p codesigning | grep -q '"$(SIGN_IDENTITY)"' && echo '$(SIGN_IDENTITY)' || echo -)
 
-.PHONY: app run install icon og clean
+.PHONY: app run install release icon og clean
 
 app:
 	swift build -c release
@@ -24,6 +24,25 @@ run: app
 install: app
 	rm -rf /Applications/Emmental.app
 	cp -R $(APP) /Applications/
+
+# A universal (Intel + Apple silicon) build, signed and zipped for a GitHub
+# release: build/release/Emmental.zip. CI passes SIGN, VERSION and BUILD_NUMBER;
+# locally they default to the signing identity and Info.plist's values.
+RELEASE := build/release
+RELEASE_APP := $(RELEASE)/Emmental.app
+release:
+	swift build -c release --arch arm64 --arch x86_64
+	rm -rf $(RELEASE)
+	mkdir -p $(RELEASE_APP)/Contents/MacOS $(RELEASE_APP)/Contents/Resources
+	cp .build/apple/Products/Release/Emmental $(RELEASE_APP)/Contents/MacOS/
+	cp Resources/Info.plist $(RELEASE_APP)/Contents/
+	cp Resources/AppIcon.icns $(RELEASE_APP)/Contents/Resources/
+	$(if $(VERSION),/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(VERSION)" $(RELEASE_APP)/Contents/Info.plist)
+	$(if $(BUILD_NUMBER),/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(BUILD_NUMBER)" $(RELEASE_APP)/Contents/Info.plist)
+	codesign --force --sign "$(SIGN)" $(RELEASE_APP)
+	ditto -c -k --keepParent $(RELEASE_APP) $(RELEASE)/Emmental.zip
+	@lipo -archs $(RELEASE_APP)/Contents/MacOS/Emmental
+	@echo "Built $(RELEASE)/Emmental.zip"
 
 # Regenerates Resources/AppIcon.icns from the wedge geometry in WedgeIcon.swift.
 icon:
