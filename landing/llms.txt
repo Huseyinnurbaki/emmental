@@ -19,3 +19,4 @@
 
 ## Links
 - Home and download: https://emmental.artichoke.monster/
+- Homebrew: brew install --cask huseyinnurbaki/tap/emmental

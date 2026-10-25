@@ -7,6 +7,9 @@
 # Keychain Access: SIGNING_P12 (the .p12, base64) and SIGNING_P12_PASSWORD.
 # Signing with the same identity every time keeps the app's identity stable,
 # so people don't have to grant Input Monitoring again after updating.
+#
+# Optional: TAP_TOKEN, a fine-grained token with Contents read and write on
+# Huseyinnurbaki/homebrew-tap, to update Casks/emmental.rb after each release.
 name: Release
 
 on:
@@ -69,6 +72,26 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" build/release/Emmental.zip \
             --title "Emmental $GITHUB_REF_NAME" --generate-notes
+
+      - name: Update the Homebrew cask
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::warning::No TAP_TOKEN secret, so the Homebrew cask wasn't updated."
+            exit 0
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA256=$(shasum -a 256 build/release/Emmental.zip | awk '{ print $1 }')
+          git clone --depth 1 "https://x-access-token:$TAP_TOKEN@github.com/Huseyinnurbaki/homebrew-tap.git" "$RUNNER_TEMP/tap"
+          mkdir -p "$RUNNER_TEMP/tap/Casks"
+          scripts/homebrew-cask.sh "$VERSION" "$SHA256" > "$RUNNER_TEMP/tap/Casks/emmental.rb"
+          cd "$RUNNER_TEMP/tap"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/emmental.rb
+          git commit -m "Emmental $VERSION"
+          git push
 
       - name: Remove signing keychain
         if: always()

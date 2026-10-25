@@ -65,8 +65,8 @@ What's next for Emmental, roughly in order.
 - [x] CONTRIBUTING.md, SECURITY.md, and issue forms (mouse report, bug, feature)
 - [x] "Open Anyway" steps for builds that aren't notarized, in the website's
       Install window
-- [ ] Make the repo public, then enable **Private vulnerability reporting**
-      (Settings › Code security) so SECURITY.md's link works
+- [x] Repo public, with **Private vulnerability reporting** on, a description,
+      website and topics
 - [x] Release workflow (`.github/workflows/release.yml`): on each `v*` tag, builds
       a universal app signed with the Emmental Dev identity (from the
       `SIGNING_P12` secrets) and attaches `Emmental.zip` to a GitHub release
@@ -78,7 +78,8 @@ What's next for Emmental, roughly in order.
       Anyway" steps
 - [ ] Website or GitHub link in the Settings window
 - [ ] Compatibility list in the README, built from mouse reports
-- [ ] Homebrew cask: `brew install --cask emmental`
+- [x] Homebrew cask in Huseyinnurbaki/homebrew-tap: `brew install --cask
+      huseyinnurbaki/tap/emmental`, updated by the release workflow (TAP_TOKEN)
 - [ ] Optional: Apple Developer ID and notarization, so downloads open without
       the "Open Anyway" step
 

@@ -144,7 +144,16 @@ at login needs. After that, **Check for Updates** › **Install Update** in Sett
 installs new versions without the Open Anyway step. Input Monitoring, for the
 Logitech features, is granted once and carries over to new versions.
 
-To uninstall, turn off **Open at login** in Settings (⌘,), choose **Quit
+Or install it with [Homebrew](https://brew.sh), which skips the Open Anyway step:
+
+```bash
+brew install --cask huseyinnurbaki/tap/emmental
+```
+
+With Homebrew, `brew uninstall --zap --cask emmental` removes the app, the login
+item and its preferences.
+
+Otherwise, to uninstall, turn off **Open at login** in Settings (⌘,), choose **Quit
 Emmental**, and drag the app to the Trash. If you already deleted it, this
 removes what's left (the login item, preferences, and the Input Monitoring entry):
 

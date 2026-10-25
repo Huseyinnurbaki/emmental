@@ -471,11 +471,11 @@ input[type=range]:disabled { opacity: 0.4; }
       <h3>Do I still need Logi Options+?</h3>
       <p>Not for speed, scrolling, SmartShift or battery. If you rely on custom button mappings or gestures, keep it for now; Emmental doesn't do those.</p>
       <h3>Why does macOS say it can't verify the developer?</h3>
-      <p>Emmental isn't notarized by Apple yet. Open it once from System Settings › Privacy &amp; Security › Open Anyway, or build it from source; the Install window in the Dock has both.</p>
+      <p>Emmental isn't notarized by Apple yet. Open it once from System Settings › Privacy &amp; Security › Open Anyway, install it with Homebrew, or build it from source; the Install window in the Dock has all three.</p>
       <h3>Do I have to click "Open Anyway" every time?</h3>
       <p>Only for the first one you download, because Emmental isn't notarized by Apple yet. After that, use Check for Updates › Install Update in Settings: updates installed from inside the app skip it. Input Monitoring, for the Logitech features, you only grant once: it carries over to new versions.</p>
       <h3>How do I uninstall it?</h3>
-      <p>Turn off Open at login in Settings, choose Quit Emmental, and drag it to the Trash. Your mouse goes back to the macOS settings the next time it reconnects. Already deleted it? The README has a one-line command that removes the leftovers.</p>
+      <p>Turn off Open at login in Settings, choose Quit Emmental, and drag it to the Trash. Your mouse goes back to the macOS settings the next time it reconnects. Installed with Homebrew? <code>brew uninstall --zap --cask emmental</code> does all of it. Already deleted it? The README has a one-line command that removes the leftovers.</p>
       <h3>How heavy is it, really?</h3>
       <p>About 9 MB of memory on an Intel Mac and about 23 MB on Apple silicon, measured on an M1 (its larger memory pages make every app look bigger there), no helper processes, and close to zero CPU. The app itself is 1.4 MB with both versions inside.</p>
       <h3>Why is it called Emmental?</h3>
@@ -538,6 +538,8 @@ input[type=range]:disabled { opacity: 0.4; }
       <div class="dim" style="margin-top:12px"># 2. First launch: macOS blocks apps that aren't notarized.</div>
       <div class="dim">#    Open System Settings › Privacy &amp; Security, scroll down,</div>
       <div class="dim">#    and click "Open Anyway" next to Emmental. Only once.</div>
+      <div class="dim" style="margin-top:12px"># Or with Homebrew, which skips the Open Anyway step:</div>
+      <div>$ brew install --cask huseyinnurbaki/tap/emmental<button class="copy" data-copy="brew install --cask huseyinnurbaki/tap/emmental">copy</button></div>
       <div class="dim" style="margin-top:12px"># Or build it yourself from source:</div>
       <div>$ git clone https://github.com/Huseyinnurbaki/emmental<button class="copy" data-copy="git clone https://github.com/Huseyinnurbaki/emmental && cd emmental && make install">copy</button></div>
       <div>$ cd emmental &amp;&amp; make install</div>
