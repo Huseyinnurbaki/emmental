@@ -156,6 +156,14 @@ input[type=range]:disabled { opacity: 0.4; }
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600; text-decoration: none; border: 0; cursor: pointer; }
 .btn.primary { background: var(--cheese); color: var(--ink); }
 .btn.ghost { background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); }
+/* Phones get a joke and a share button instead of a download they can't use. */
+.phone-note, .phone-only { display: none; }
+@media (max-width: 600px) and (hover: none) and (pointer: coarse) {
+  .phone-note { display: block; }
+  .phone-only { display: inline-flex; }
+  .desktop-only { display: none; }
+}
+.hero .phone-note b { color: var(--cheese); }
 .fineprint { font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 12px; }
 
 /* A second pointer that follows your mouse the way Emmental would move it. */
@@ -404,8 +412,10 @@ input[type=range]:disabled { opacity: 0.4; }
   <section class="hero">
     <h1>Mouse tuning, without the bloat.</h1>
     <p>Speed, scrolling and SmartShift for your mouse, from a 1.4 MB app in your menu bar. No background updater, no account, no tracking.</p>
+    <p class="phone-note"><b>This is a phone. It has no mouse.</b> Emmental is for Macs, so send the link to yours.</p>
     <div class="actions">
-      <a class="btn primary" href="https://github.com/Huseyinnurbaki/emmental/releases/latest/download/Emmental.zip">Download free for Mac</a>
+      <button class="btn primary phone-only" id="share-link">Send me the link</button>
+      <a class="btn primary desktop-only" href="https://github.com/Huseyinnurbaki/emmental/releases/latest/download/Emmental.zip">Download free for Mac</a>
       <button class="btn ghost" data-open="readme">What it does</button>
     </div>
     <div class="fineprint">macOS 12 or later · Version 0.2.3</div>
@@ -797,6 +807,21 @@ input[type=range]:disabled { opacity: 0.4; }
   }
   $('#check-updates').addEventListener('click', () => {
     showToast("You're up to date. Also, this is a website.");
+  });
+  // Phones only: AirDrop, mail or message the link to a Mac, or copy it.
+  $('#share-link').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const url = 'https://emmental.artichoke.monster/';
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Emmental', text: 'Mouse tuning for Mac, without the bloat.', url }); } catch {}
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      button.textContent = 'Link copied';
+    } catch {
+      button.textContent = url;
+    }
   });
   $('#quit').addEventListener('click', () => {
     setMenu(false);
