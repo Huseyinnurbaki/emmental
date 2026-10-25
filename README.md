@@ -1,7 +1,7 @@
 # 🧀 Emmental
 
-A tiny macOS menu bar app for tuning your mouse, without the weight of vendor
-software like Logi Options+. Acceleration and scroll speed work with any
+A tiny, free macOS menu bar app for tuning your mouse, without the weight of
+vendor software like Logi Options+. Acceleration and scroll speed work with any
 external mouse; the Logitech extras work with Logitech mice that speak HID++.
 
 Built and tested on an MX Master 3S. Emmental doesn't check the model: it asks
@@ -32,6 +32,15 @@ Also:
 - A 1.4 MB app using under 25 MB of memory (about 9 MB on Intel, 23 MB on an M1)
 - Uses public IOKit APIs only. Acceleration and scroll speed need no
   permissions; the Logitech features are opt-in and need Input Monitoring
+
+## Built with AI, free for good
+
+Emmental was built with AI in a few sittings, to replace Logi Options+ on one
+Mac. It's free and MIT licensed: no account, no paid version.
+
+If a gadget you own comes with an app you don't love, you can do the same.
+Describe the one thing you actually want, and build that. Fork this repo if it
+helps as a starting point.
 
 ## Build and run
 
