@@ -38,10 +38,6 @@ Also:
 Emmental was built with AI in a few sittings, to replace Logi Options+ on one
 Mac. It's free and MIT licensed: no account, no paid version.
 
-If a gadget you own comes with an app you don't love, you can do the same.
-Describe the one thing you actually want, and build that. Fork this repo if it
-helps as a starting point.
-
 ## Build and run
 
 Requires Xcode command line tools (Swift 5.6+) and macOS 12 or later.
